@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crypto & Encoding Studio</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        .custom-scrollbar::-webkit-scrollbar { width: 8px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #1f2937; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #4b5563; border-radius: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #6b7280; }
+    </style>
+</head>
+<body class="bg-gray-950 text-gray-100 min-h-screen p-4 sm:p-8 flex flex-col items-center">
+
+    <div class="max-w-6xl w-full">
+        <header class="mb-8">
+            <h1 class="text-3xl font-bold bg-gradient-to-r from-emerald-400 to-cyan-500 bg-clip-text text-transparent">
+                Cipher & Encoding Studio
+            </h1>
+            <p class="text-gray-400 mt-2 text-sm">Convert, Encode, and Encrypt strings locally in your browser.</p>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            
+            <!-- Input & Controls Section -->
+            <div class="bg-gray-900 border border-gray-800 rounded-xl p-5 shadow-xl flex flex-col gap-5">
+                
+                <!-- Operation Type -->
+                <div class="relative flex p-1 bg-gray-800 rounded-lg w-full">
+                    <div id="pillBg" class="absolute top-1 bottom-1 left-1 w-[calc(50%-0.5rem)] bg-emerald-600 rounded-md transition-transform duration-300 ease-in-out translate-x-0"></div>
+                    <button id="btnEncoding" class="relative flex-1 py-2 px-4 z-10 text-white font-medium transition-colors text-sm" onclick="setCategory('encoding')">Encoding / Decoding</button>
+                    <button id="btnEncryption" class="relative flex-1 py-2 px-4 z-10 text-gray-400 hover:text-white font-medium transition-colors text-sm" onclick="setCategory('encryption')">Encryption / Decryption</button>
+                </div>
+
+                <!-- Action & Algorithm Select -->
+                <div class="flex flex-col sm:flex-row gap-4">
+                    <div class="flex-1 flex flex-col gap-2">
+                        <label class="text-xs text-gray-400 font-semibold uppercase tracking-wider">Action</label>
+                        <div class="flex gap-4 items-center h-10 px-2">
+                            <label class="flex items-center gap-2 cursor-pointer group">
+                                <input type="radio" name="action" value="process" checked class="sr-only peer">
+                                <div class="w-4 h-4 rounded-full border-2 border-gray-500 peer-checked:border-emerald-500 peer-checked:border-[5px] transition-all duration-200"></div>
+                                <span id="labelProcess" class="text-sm text-gray-400 peer-checked:text-gray-200 transition-colors">Encode</span>
+                            </label>
+                            <label class="flex items-center gap-2 cursor-pointer group">
+                                <input type="radio" name="action" value="reverse" class="sr-only peer">
+                                <div class="w-4 h-4 rounded-full border-2 border-gray-500 peer-checked:border-emerald-500 peer-checked:border-[5px] transition-all duration-200"></div>
+                                <span id="labelReverse" class="text-sm text-gray-400 peer-checked:text-gray-200 transition-colors">Decode</span>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="flex-1 flex flex-col gap-2">
+                        <label for="algorithmSelect" class="text-xs text-gray-400 font-semibold uppercase tracking-wider">Algorithm</label>
+                        <select id="algorithmSelect" class="bg-gray-800 border border-gray-700 text-gray-200 text-sm rounded-lg focus:ring-emerald-500 focus:border-emerald-500 block w-full p-2.5 outline-none transition-colors">
+                            <!-- Populated by JS -->
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Password/Key Input (Hidden by default) -->
+                <div id="keyContainer" class="hidden flex-col gap-2">
+                    <label for="cryptoKey" class="text-xs text-gray-400 font-semibold uppercase tracking-wider">Secret Key / Password</label>
+                    <input type="text" id="cryptoKey" placeholder="Enter your secret key..." class="bg-gray-800 border border-gray-700 text-gray-200 text-sm rounded-lg focus:ring-emerald-500 focus:border-emerald-500 block w-full p-2.5 outline-none transition-colors">
+                </div>
+
+                <!-- Input Text -->
+                <div class="flex flex-col gap-2 flex-grow">
+                    <div class="flex justify-between items-end">
+                        <label for="inputText" class="text-xs text-gray-400 font-semibold uppercase tracking-wider">Input Text</label>
+                        <button onclick="clearInput()" class="text-xs text-gray-500 hover:text-gray-300 transition-colors">Clear</button>
+                    </div>
+                    <textarea id="inputText" placeholder="Type or paste your text here..." class="bg-gray-800 custom-scrollbar border border-gray-700 text-gray-200 text-sm rounded-lg focus:ring-emerald-500 focus:border-emerald-500 block w-full p-3 h-48 sm:h-full outline-none resize-none transition-colors"></textarea>
+                </div>
+            </div>
+
+            <!-- Output Section -->
+            <div class="bg-gray-900 border border-gray-800 rounded-xl p-5 shadow-xl flex flex-col gap-2">
+                <div class="flex justify-between items-end mb-3">
+                    <label class="text-xs text-gray-400 font-semibold uppercase tracking-wider">Output Result</label>
+                    <button onclick="copyOutput()" class="flex items-center gap-1.5 text-xs bg-gray-800 hover:bg-gray-700 text-gray-300 py-1.5 px-3 rounded-md border border-gray-700 transition-colors">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                        Copy
+                    </button>
+                </div>
+                
+                <div id="outputArea" class="bg-gray-950 border border-gray-800 rounded-lg p-4 h-full min-h-[300px] overflow-auto custom-scrollbar font-mono text-sm text-gray-300 break-all whitespace-pre-wrap"></div>
+                
+                <!-- Toast Message -->
+                <div id="toastMsg" class="opacity-0 transition-opacity duration-300 text-xs text-emerald-400 text-center mt-2 h-4">
+                    Copied to clipboard!
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // Data configurations
+        const algorithms = {
+            encoding: [
+                { id: 'base64', name: 'Base64' },
+                { id: 'base32', name: 'Base32' },
+                { id: 'base58', name: 'Base58' },
+                { id: 'hex', name: 'Hexadecimal' },
+                { id: 'binary', name: 'Binary' },
+                { id: 'uri', name: 'URI Component' }
+            ],
+            encryption: [
+                { id: 'aes', name: 'AES' },
+                { id: 'tripledes', name: 'TripleDES' },
+                { id: 'rabbit', name: 'Rabbit' },
+                { id: 'rc4', name: 'RC4' },
+                { id: 'xor', name: 'XOR Cipher' }
+            ]
+        };
+
+        // State
+        let currentCategory = 'encoding';
+
+        // DOM Elements
+        const btnEncoding = document.getElementById('btnEncoding');
+        const btnEncryption = document.getElementById('btnEncryption');
+        const labelProcess = document.getElementById('labelProcess');
+        const labelReverse = document.getElementById('labelReverse');
+        const algorithmSelect = document.getElementById('algorithmSelect');
+        const keyContainer = document.getElementById('keyContainer');
+        const inputText = document.getElementById('inputText');
+        const cryptoKey = document.getElementById('cryptoKey');
+        const outputArea = document.getElementById('outputArea');
+        const toastMsg = document.getElementById('toastMsg');
+        const radioActions = document.getElementsByName('action');
+
+        // Initialization
+        function init() {
+            populateSelect();
+            addEventListeners();
+            executeTransformation();
+        }
+
+        function setCategory(category) {
+            currentCategory = category;
+            const pillBg = document.getElementById('pillBg');
+            
+            // Update UI tabs
+            if(category === 'encoding') {
+                pillBg.style.transform = 'translateX(0)';
+                btnEncoding.classList.replace('text-gray-400', 'text-white');
+                btnEncryption.classList.replace('text-white', 'text-gray-400');
+                labelProcess.textContent = "Encode";
+                labelReverse.textContent = "Decode";
+                keyContainer.classList.add('hidden');
+            } else {
+                pillBg.style.transform = 'translateX(100%)';
+                btnEncryption.classList.replace('text-gray-400', 'text-white');
+                btnEncoding.classList.replace('text-white', 'text-gray-400');
+                labelProcess.textContent = "Encrypt";
+                labelReverse.textContent = "Decrypt";
+                keyContainer.classList.remove('hidden');
+                keyContainer.classList.add('flex');
+            }
+
+            populateSelect();
+            executeTransformation();
+        }
+
+        function populateSelect() {
+            algorithmSelect.innerHTML = '';
+            algorithms[currentCategory].forEach(algo => {
+                const opt = document.createElement('option');
+                opt.value = algo.id;
+                opt.textContent = algo.name;
+                algorithmSelect.appendChild(opt);
+            });
+        }
+
+        function addEventListeners() {
+            inputText.addEventListener('input', executeTransformation);
+            cryptoKey.addEventListener('input', executeTransformation);
+            algorithmSelect.addEventListener('change', executeTransformation);
+            radioActions.forEach(radio => {
+                radio.addEventListener('change', executeTransformation);
+            });
+        }
+
+        function getAction() {
+            for (const radio of radioActions) {
+                if (radio.checked) return radio.value;
+            }
+            return 'process';
+        }
+
+        function clearInput() {
+            inputText.value = '';
+            executeTransformation();
+        }
+
+        function copyOutput() {
+            const textToCopy = outputArea.innerText;
+            if(!textToCopy) return;
+
+            // Fallback copy method
+            const textArea = document.createElement("textarea");
+            textArea.value = textToCopy;
+            textArea.style.position = "fixed";
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            try {
+                document.execCommand('copy');
+                toastMsg.classList.remove('opacity-0');
+                setTimeout(() => toastMsg.classList.add('opacity-0'), 2000);
+            } catch (err) {
+                console.error('Copy failed', err);
+            }
+            document.body.removeChild(textArea);
+        }
+
+        // --- Core Implementations ---
+
+        const Base32 = {
+            chars: "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567",
+            encode: function(text) {
+                const bytes = new TextEncoder().encode(text);
+                let bits = 0, value = 0, output = "";
+                for (let i = 0; i < bytes.length; i++) {
+                    value = (value << 8) | bytes[i];
+                    bits += 8;
+                    while (bits >= 5) {
+                        output += this.chars[(value >>> (bits - 5)) & 31];
+                        bits -= 5;
+                    }
+                }
+                if (bits > 0) output += this.chars[(value << (5 - bits)) & 31];
+                while ((output.length % 8) !== 0) output += "=";
+                return output;
+            },
+            decode: function(encoded) {
+                encoded = encoded.replace(/=+$/, "").toUpperCase();
+                let bits = 0, value = 0, bytes = [];
+                for (let i = 0; i < encoded.length; i++) {
+                    const val = this.chars.indexOf(encoded[i]);
+                    if (val === -1) throw new Error("Invalid Base32 character.");
+                    value = (value << 5) | val;
+                    bits += 5;
+                    if (bits >= 8) {
+                        bytes.push((value >>> (bits - 8)) & 255);
+                        bits -= 8;
+                    }
+                }
+                return new TextDecoder().decode(new Uint8Array(bytes));
+            }
+        };
+
+        const Base58 = {
+            chars: "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz",
+            encode: function(text) {
+                if (!text) return "";
+                let bytes = new TextEncoder().encode(text);
+                let num = 0n;
+                for (let i = 0; i < bytes.length; i++) {
+                    num = (num * 256n) + BigInt(bytes[i]);
+                }
+                let encoded = "";
+                while (num > 0n) {
+                    let remainder = Number(num % 58n);
+                    num = num / 58n;
+                    encoded = this.chars[remainder] + encoded;
+                }
+                for (let i = 0; i < bytes.length && bytes[i] === 0; i++) {
+                    encoded = "1" + encoded;
+                }
+                return encoded;
+            },
+            decode: function(encoded) {
+                if (!encoded) return "";
+                let num = 0n;
+                for (let i = 0; i < encoded.length; i++) {
+                    let p = this.chars.indexOf(encoded[i]);
+                    if (p < 0) throw new Error("Invalid Base58 character.");
+                    num = (num * 58n) + BigInt(p);
+                }
+                let bytes = [];
+                while (num > 0n) {
+                    bytes.push(Number(num % 256n));
+                    num = num / 256n;
+                }
+                for (let i = 0; i < encoded.length && encoded[i] === "1"; i++) {
+                    bytes.push(0);
+                }
+                bytes.reverse();
+                return new TextDecoder().decode(new Uint8Array(bytes));
+            }
+        };
+
+        const Transformers = {
+            // ENCODING
+            base64: {
+                process: (t) => btoa(unescape(encodeURIComponent(t))),
+                reverse: (t) => decodeURIComponent(escape(atob(t)))
+            },
+            base32: {
+                process: (t) => Base32.encode(t),
+                reverse: (t) => Base32.decode(t)
+            },
+            base58: {
+                process: (t) => Base58.encode(t),
+                reverse: (t) => Base58.decode(t)
+            },
+            hex: {
+                process: (t) => Array.from(new TextEncoder().encode(t)).map(b => b.toString(16).padStart(2, '0')).join(''),
+                reverse: (t) => {
+                    t = t.replace(/\s+/g, '');
+                    if (t.length % 2 !== 0) throw new Error("Invalid hex length.");
+                    const bytes = new Uint8Array(t.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
+                    return new TextDecoder().decode(bytes);
+                }
+            },
+            binary: {
+                process: (t) => Array.from(new TextEncoder().encode(t)).map(b => b.toString(2).padStart(8, '0')).join(' '),
+                reverse: (t) => {
+                    t = t.replace(/\s+/g, '');
+                    if(t.length % 8 !== 0) throw new Error("Invalid binary length.");
+                    const bytes = new Uint8Array(t.match(/.{1,8}/g).map(byte => parseInt(byte, 2)));
+                    return new TextDecoder().decode(bytes);
+                }
+            },
+            uri: {
+                process: (t) => encodeURIComponent(t),
+                reverse: (t) => decodeURIComponent(t)
+            },
+
+            // ENCRYPTION
+            aes: {
+                process: (t, k) => CryptoJS.AES.encrypt(t, k).toString(),
+                reverse: (t, k) => {
+                    const dec = CryptoJS.AES.decrypt(t, k).toString(CryptoJS.enc.Utf8);
+                    if(!dec) throw new Error("Malformed UTF-8 data or incorrect key.");
+                    return dec;
+                }
+            },
+            tripledes: {
+                process: (t, k) => CryptoJS.TripleDES.encrypt(t, k).toString(),
+                reverse: (t, k) => {
+                    const dec = CryptoJS.TripleDES.decrypt(t, k).toString(CryptoJS.enc.Utf8);
+                    if(!dec) throw new Error("Malformed UTF-8 data or incorrect key.");
+                    return dec;
+                }
+            },
+            rabbit: {
+                process: (t, k) => CryptoJS.Rabbit.encrypt(t, k).toString(),
+                reverse: (t, k) => {
+                    const dec = CryptoJS.Rabbit.decrypt(t, k).toString(CryptoJS.enc.Utf8);
+                    if(!dec) throw new Error("Malformed UTF-8 data or incorrect key.");
+                    return dec;
+                }
+            },
+            rc4: {
+                process: (t, k) => CryptoJS.RC4.encrypt(t, k).toString(),
+                reverse: (t, k) => {
+                    const dec = CryptoJS.RC4.decrypt(t, k).toString(CryptoJS.enc.Utf8);
+                    if(!dec) throw new Error("Malformed UTF-8 data or incorrect key.");
+                    return dec;
+                }
+            },
+            xor: {
+                process: (t, k) => {
+                    const tBytes = new TextEncoder().encode(t);
+                    const kBytes = new TextEncoder().encode(k);
+                    let res = new Uint8Array(tBytes.length);
+                    for(let i=0; i<tBytes.length; i++) {
+                        res[i] = tBytes[i] ^ kBytes[i % kBytes.length];
+                    }
+                    return btoa(String.fromCharCode.apply(null, res));
+                },
+                reverse: (t, k) => {
+                    const raw = atob(t);
+                    const tBytes = new Uint8Array(raw.length);
+                    for(let i=0; i<raw.length; i++) tBytes[i] = raw.charCodeAt(i);
+                    const kBytes = new TextEncoder().encode(k);
+                    let res = new Uint8Array(tBytes.length);
+                    for(let i=0; i<tBytes.length; i++) {
+                        res[i] = tBytes[i] ^ kBytes[i % kBytes.length];
+                    }
+                    return new TextDecoder().decode(res);
+                }
+            }
+        };
+
+        function executeTransformation() {
+            const text = inputText.value;
+            const algo = algorithmSelect.value;
+            const action = getAction();
+            const key = cryptoKey.value;
+
+            if (!text) {
+                outputArea.innerHTML = '<span class="text-gray-600 italic">Output will appear here...</span>';
+                return;
+            }
+
+            if (currentCategory === 'encryption' && !key) {
+                outputArea.innerHTML = '<span class="text-red-400">Please provide a secret key/password.</span>';
+                return;
+            }
+
+            try {
+                const transformer = Transformers[algo];
+                if(!transformer) throw new Error("Algorithm not implemented.");
+
+                let result = "";
+                if (action === 'process') {
+                    result = transformer.process(text, key);
+                } else {
+                    result = transformer.reverse(text, key);
+                }
+                
+                // Prevent XSS in output by setting textContent instead of innerHTML
+                outputArea.textContent = result;
+
+            } catch (err) {
+                outputArea.innerHTML = `<span class="text-red-400 flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    Error during operation: ${err.message}
+                </span>`;
+            }
+        }
+
+        // Boot
+        init();
+
+    </script>
+</body>
+</html>
