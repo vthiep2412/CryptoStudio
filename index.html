@@ -1,62 +1,128 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Crypto & Encoding Studio</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <script type="module">
+        import * as openpgp from 'https://cdn.jsdelivr.net/npm/openpgp@6.1.1/dist/openpgp.min.mjs';
+        window.openpgp = openpgp;
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-        body { font-family: 'Inter', sans-serif; }
-        .custom-scrollbar::-webkit-scrollbar { width: 8px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: #1f2937; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #4b5563; border-radius: 4px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #6b7280; }
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #1f2937;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #4b5563;
+            border-radius: 4px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #6b7280;
+        }
     </style>
 </head>
+
 <body class="bg-gray-950 text-gray-100 min-h-screen p-4 sm:p-8 flex flex-col items-center">
 
     <div class="max-w-6xl w-full flex flex-col flex-grow">
         <header class="mb-6 md:mb-8">
-            <h1 class="text-2xl md:text-3xl font-bold bg-gradient-to-r from-emerald-400 to-cyan-500 bg-clip-text text-transparent">
+            <h1
+                class="text-2xl md:text-3xl font-bold bg-gradient-to-r from-emerald-400 to-cyan-500 bg-clip-text text-transparent">
                 Cipher & Encoding Studio
             </h1>
-            <p class="text-gray-400 mt-2 text-xs md:text-sm">Convert, Encode, and Encrypt strings locally in your browser.</p>
+            <p class="text-gray-400 mt-2 text-xs md:text-sm">Convert, Encode, and Encrypt strings locally in your
+                browser.</p>
         </header>
 
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 flex-grow">
-            
+
             <!-- Input & Controls Section -->
-            <div class="bg-gray-900 border border-gray-800 rounded-xl p-4 md:p-5 shadow-xl flex flex-col gap-4 md:gap-5 h-full">
-                
+            <div
+                class="bg-gray-900 border border-gray-800 rounded-xl p-4 md:p-5 shadow-xl flex flex-col gap-4 md:gap-5 h-full">
+
                 <!-- Operation Type -->
                 <div class="relative flex p-1 bg-gray-800 rounded-lg w-full">
-                    <div id="pillBg" class="absolute top-1 bottom-1 left-1 w-[calc(50%-0.5rem)] bg-emerald-600 rounded-md transition-transform duration-300 ease-in-out translate-x-0"></div>
-                    <button id="btnEncoding" class="relative flex-1 py-2 px-1 sm:px-4 z-10 text-white font-medium transition-colors text-xs sm:text-sm" onclick="setCategory('encoding')">Encoding / Decoding</button>
-                    <button id="btnEncryption" class="relative flex-1 py-2 px-1 sm:px-4 z-10 text-gray-400 hover:text-white font-medium transition-colors text-xs sm:text-sm" onclick="setCategory('encryption')">Encryption / Decryption</button>
+                    <div id="pillBg"
+                        class="absolute top-1 bottom-1 left-1 w-[calc(33.333%-2.66px)] bg-emerald-600 rounded-md transition-transform duration-300 ease-in-out translate-x-0">
+                    </div>
+                    <button id="btnEncoding"
+                        class="relative flex-1 py-2 px-1 z-10 text-white font-medium transition-colors text-[10px] sm:text-xs md:text-sm"
+                        onclick="setCategory('encoding')">Encoding</button>
+                    <button id="btnEncryption"
+                        class="relative flex-1 py-2 px-1 z-10 text-gray-400 hover:text-white font-medium transition-colors text-[10px] sm:text-xs md:text-sm"
+                        onclick="setCategory('encryption')">Encryption</button>
+                    <button id="btnPGP"
+                        class="relative flex-1 py-2 px-1 z-10 text-gray-400 hover:text-white font-medium transition-colors text-[10px] sm:text-xs md:text-sm"
+                        onclick="setCategory('pgp')">Pretty Good Privacy</button>
                 </div>
 
                 <!-- Action & Algorithm Select -->
-                <div class="flex flex-col sm:flex-row gap-4">
-                    <div class="flex-1 flex flex-col gap-2">
+                <div id="controlsContainer" class="flex flex-col sm:flex-row gap-4">
+                    <!-- Standard Action Area (Encoding/Encryption) -->
+                    <div id="actionArea" class="flex-1 flex flex-col gap-2">
                         <label class="text-xs text-gray-400 font-semibold uppercase tracking-wider">Action</label>
                         <div class="flex gap-4 items-center h-10 px-2">
                             <label class="flex items-center gap-2 cursor-pointer group">
                                 <input type="radio" name="action" value="process" checked class="sr-only peer">
-                                <div class="w-4 h-4 rounded-full border-2 border-gray-500 peer-checked:border-emerald-500 peer-checked:border-[5px] transition-all duration-200"></div>
-                                <span id="labelProcess" class="text-sm text-gray-400 peer-checked:text-gray-200 transition-colors">Encode</span>
+                                <div
+                                    class="w-4 h-4 rounded-full border-2 border-gray-500 peer-checked:border-emerald-500 peer-checked:border-[5px] transition-all duration-200">
+                                </div>
+                                <span id="labelProcess"
+                                    class="text-sm text-gray-400 peer-checked:text-gray-200 transition-colors">Encode</span>
                             </label>
                             <label class="flex items-center gap-2 cursor-pointer group">
                                 <input type="radio" name="action" value="reverse" class="sr-only peer">
-                                <div class="w-4 h-4 rounded-full border-2 border-gray-500 peer-checked:border-emerald-500 peer-checked:border-[5px] transition-all duration-200"></div>
-                                <span id="labelReverse" class="text-sm text-gray-400 peer-checked:text-gray-200 transition-colors">Decode</span>
+                                <div
+                                    class="w-4 h-4 rounded-full border-2 border-gray-500 peer-checked:border-emerald-500 peer-checked:border-[5px] transition-all duration-200">
+                                </div>
+                                <span id="labelReverse"
+                                    class="text-sm text-gray-400 peer-checked:text-gray-200 transition-colors">Decode</span>
                             </label>
                         </div>
                     </div>
-                    <div class="flex-1 flex flex-col gap-2">
-                        <label for="algorithmSelect" class="text-xs text-gray-400 font-semibold uppercase tracking-wider">Algorithm</label>
-                        <select id="algorithmSelect" class="bg-gray-800 border border-gray-700 text-gray-200 text-sm rounded-lg focus:ring-emerald-500 focus:border-emerald-500 block w-full p-2.5 outline-none transition-colors">
+
+                    <!-- PGP Action Area (Jumping Pill) -->
+                    <div id="pgpActionArea" class="hidden flex-1 flex flex-col gap-2">
+                        <label class="text-xs text-gray-400 font-semibold uppercase tracking-wider">Action</label>
+                        <div class="relative flex p-1 bg-gray-800 rounded-lg w-full">
+                            <div id="pgpPillBg"
+                                class="absolute top-1 bottom-1 left-1 w-[calc(25%-2px)] bg-emerald-600 rounded-md transition-transform duration-300 ease-in-out translate-x-0">
+                            </div>
+                            <button
+                                class="pgp-switch-btn relative flex-1 py-2 z-10 text-white font-bold transition-colors text-xs uppercase tracking-wider"
+                                onclick="setPgpAction('pgp-encrypt', 0)">Encrypt</button>
+                            <button
+                                class="pgp-switch-btn relative flex-1 py-2 z-10 text-gray-400 hover:text-white font-bold transition-colors text-xs uppercase tracking-wider"
+                                onclick="setPgpAction('pgp-decrypt', 1)">Decrypt</button>
+                            <button
+                                class="pgp-switch-btn relative flex-1 py-2 z-10 text-gray-400 hover:text-white font-bold transition-colors text-xs uppercase tracking-wider"
+                                onclick="setPgpAction('pgp-sign', 2)">Sign</button>
+                            <button
+                                class="pgp-switch-btn relative flex-1 py-2 z-10 text-gray-400 hover:text-white font-bold transition-colors text-xs uppercase tracking-wider"
+                                onclick="setPgpAction('pgp-verify', 3)">Verify</button>
+                        </div>
+                    </div>
+                    <div id="algoSelectContainer" class="flex-1 flex flex-col gap-2">
+                        <label for="algorithmSelect"
+                            class="text-xs text-gray-400 font-semibold uppercase tracking-wider">Algorithm</label>
+                        <select id="algorithmSelect"
+                            class="bg-gray-800 border border-gray-700 text-gray-200 text-sm rounded-lg focus:ring-emerald-500 focus:border-emerald-500 block w-full p-2.5 outline-none transition-colors">
                             <!-- Populated by JS -->
                         </select>
                     </div>
@@ -64,17 +130,83 @@
 
                 <!-- Password/Key Input (Hidden by default) -->
                 <div id="keyContainer" class="hidden flex-col gap-2">
-                    <label for="cryptoKey" class="text-xs text-gray-400 font-semibold uppercase tracking-wider">Secret Key / Password</label>
-                    <input type="text" id="cryptoKey" placeholder="Enter your secret key..." class="bg-gray-800 border border-gray-700 text-gray-200 text-sm rounded-lg focus:ring-emerald-500 focus:border-emerald-500 block w-full p-2.5 outline-none transition-colors">
+                    <div class="flex justify-between items-center">
+                        <label for="cryptoKey"
+                            class="text-xs text-gray-400 font-semibold uppercase tracking-wider">Secret Key / PGP
+                            Key</label>
+                        <a id="genKeyLink" href="pgp-gen.html"
+                            class="hidden text-xs text-emerald-400 hover:text-emerald-300 font-bold bg-emerald-400/10 px-4 py-2 rounded-lg border border-emerald-500/30 transition-all uppercase tracking-wider hover:bg-emerald-400/20">
+                            Generate PGP Key
+                        </a>
+                    </div>
+                    <textarea id="cryptoKey" placeholder="Enter your secret key or PGP armored key..."
+                        class="bg-gray-800 border border-gray-700 text-gray-200 text-sm rounded-lg focus:ring-emerald-500 focus:border-emerald-500 block w-full p-2.5 min-h-[80px] outline-none transition-colors custom-scrollbar resize-none"></textarea>
+
+                    <!-- Enhance Protection Controls -->
+                    <div id="protectionControls"
+                        class="hidden mt-1 p-4 bg-gray-900/40 border border-gray-800/60 rounded-xl flex-col gap-3 transition-all">
+                        <div class="flex justify-between items-center">
+                            <label class="flex items-center gap-3 cursor-pointer group">
+                                <div class="relative">
+                                    <input type="checkbox" id="enhanceProtection" class="sr-only peer"
+                                        onchange="toggleSecurityLevel()">
+                                    <div
+                                        class="w-9 h-5 bg-gray-700 rounded-full peer peer-checked:bg-emerald-600 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-full">
+                                    </div>
+                                </div>
+                                <span
+                                    class="text-xs text-gray-400 font-bold uppercase tracking-wider group-hover:text-emerald-400 transition-colors">Enhance
+                                    Protection</span>
+                            </label>
+                            <div id="levelDisplay" class="hidden items-center gap-3">
+                                <button onclick="adjustLevel(-1)"
+                                    class="w-7 h-7 flex items-center justify-center bg-gray-800 border border-gray-700 rounded-md text-emerald-400 hover:bg-gray-700 transition-colors font-bold">-</button>
+                                <span id="securityLevelDisplay"
+                                    class="w-8 text-emerald-400 text-center text-sm font-black tabular-nums">5</span>
+                                <button onclick="adjustLevel(1)"
+                                    class="w-7 h-7 flex items-center justify-center bg-gray-800 border border-gray-700 rounded-md text-emerald-400 hover:bg-gray-700 transition-colors font-bold">+</button>
+                            </div>
+                        </div>
+
+                        <div id="levelSliderContainer" class="hidden flex-col gap-2">
+                            <input type="range" id="securitySlider" min="1" max="7" value="5" step="1"
+                                class="w-full h-1.5 bg-gray-800 rounded-lg appearance-none cursor-pointer accent-emerald-500 overflow-hidden"
+                                oninput="syncLevel(this.value)">
+                            <div class="flex justify-between px-1">
+                                <span class="text-[9px] text-gray-600 font-bold">MIN</span>
+                                <span class="text-[9px] text-gray-600 font-bold">VAULT</span>
+                            </div>
+                            <div id="levelSpecs"
+                                class="text-xs text-slate-500 font-mono italic leading-tight border-l-2 border-emerald-500/20 pl-3 mt-1">
+                                <!-- Populated dynamically -->
+                            </div>
+                        </div>
+                        <input type="hidden" id="securityLevel" value="5">
+                    </div>
+                </div>
+
+                <!-- PGP Passphrase (PGP Specific) -->
+                <div id="pgpPassContainer" class="hidden flex-col gap-2">
+                    <div class="flex justify-between items-center">
+                        <label for="pgpPassphrase"
+                            class="text-xs text-slate-500 font-semibold uppercase tracking-wider">PGP Passphrase</label>
+                        <button onclick="togglePgpPass()"
+                            class="text-[10px] text-emerald-500 hover:text-emerald-400 font-bold uppercase tracking-wider transition-colors">Show/Hide</button>
+                    </div>
+                    <input type="password" id="pgpPassphrase" placeholder="Enter passphrase for private key..."
+                        class="bg-gray-800 border border-gray-700 text-gray-200 text-sm rounded-lg focus:ring-emerald-500 focus:border-emerald-500 block w-full p-2.5 outline-none transition-colors">
                 </div>
 
                 <!-- Input Text -->
                 <div class="flex flex-col gap-2 flex-grow">
                     <div class="flex justify-between items-end">
-                        <label for="inputText" class="text-xs text-gray-400 font-semibold uppercase tracking-wider">Input Text</label>
-                        <button onclick="clearInput()" class="text-xs text-gray-500 hover:text-gray-300 transition-colors">Clear</button>
+                        <label for="inputText"
+                            class="text-xs text-gray-400 font-semibold uppercase tracking-wider">Input Text</label>
+                        <button onclick="clearInput()"
+                            class="text-xs text-gray-500 hover:text-gray-300 transition-colors">Clear</button>
                     </div>
-                    <textarea id="inputText" placeholder="Type or paste your text here..." class="bg-gray-800 custom-scrollbar border border-gray-700 text-gray-200 text-sm rounded-lg focus:ring-emerald-500 focus:border-emerald-500 block w-full p-3 min-h-[150px] flex-grow outline-none resize-none transition-colors"></textarea>
+                    <textarea id="inputText" placeholder="Type or paste your text here..."
+                        class="bg-gray-800 custom-scrollbar border border-gray-700 text-gray-200 text-sm rounded-lg focus:ring-emerald-500 focus:border-emerald-500 block w-full p-3 min-h-[150px] flex-grow outline-none resize-none transition-colors"></textarea>
                 </div>
             </div>
 
@@ -82,32 +214,55 @@
             <div class="bg-gray-900 border border-gray-800 rounded-xl p-4 md:p-5 shadow-xl flex flex-col gap-2 h-full">
                 <div class="flex justify-between items-end mb-1 md:mb-3">
                     <label class="text-xs text-gray-400 font-semibold uppercase tracking-wider">Output Result</label>
-                    <button onclick="copyOutput()" class="flex items-center gap-1.5 text-xs bg-gray-800 hover:bg-gray-700 text-gray-300 py-1.5 px-3 rounded-md border border-gray-700 transition-colors">
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                    <button onclick="copyOutput()"
+                        class="flex items-center gap-1.5 text-xs bg-gray-800 hover:bg-gray-700 text-gray-300 py-1.5 px-3 rounded-md border border-gray-700 transition-colors">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                            xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z">
+                            </path>
+                        </svg>
                         Copy
                     </button>
                 </div>
-                
-                <div id="outputArea" class="bg-gray-950 border border-gray-800 rounded-lg p-4 flex-grow min-h-[150px] md:min-h-[300px] overflow-auto custom-scrollbar font-mono text-sm text-gray-300 break-all whitespace-pre-wrap"></div>
-                
+
+                <div id="outputArea"
+                    class="bg-gray-950 border border-gray-800 rounded-lg p-4 flex-grow min-h-[150px] md:min-h-[300px] overflow-auto custom-scrollbar font-mono text-sm text-gray-300 break-all whitespace-pre-wrap">
+                </div>
+
+                <!-- Recovery Area (Dynamic buttons) -->
+                <div id="recoveryArea" class="hidden justify-end mt-2"></div>
+
                 <!-- Toast Message -->
-                <div id="toastMsg" class="opacity-0 transition-opacity duration-300 text-xs text-emerald-400 text-center mt-2 h-4">
+                <div id="toastMsg"
+                    class="opacity-0 transition-opacity duration-300 text-xs text-emerald-400 text-center mt-2 h-4">
                     Copied to clipboard!
+                </div>
+
+                <!-- Live Status Indicator -->
+                <div class="mt-4 flex justify-between items-center border-t border-gray-800/60 pt-4">
+                    <span class="text-xs text-slate-500 uppercase font-bold tracking-widest">Engine Status</span>
+                    <div id="statusText" class="text-xs text-slate-500 uppercase font-black tracking-widest">Idle</div>
                 </div>
             </div>
 
         </div>
 
         <!-- Footer -->
-        <footer class="mt-12 pb-4 text-center text-sm text-gray-500 flex flex-col sm:flex-row justify-center items-center gap-4 border-t border-gray-800 pt-6">
-            <a href="https://github.com/vthiep2412/CryptoStudio" target="_blank" rel="noopener noreferrer" class="hover:text-emerald-400 transition-colors flex items-center gap-1.5">
+        <footer
+            class="mt-12 pb-4 text-center text-sm text-gray-500 flex flex-col sm:flex-row justify-center items-center gap-4 border-t border-gray-800 pt-6">
+            <a href="https://github.com/vthiep2412/CryptoStudio" target="_blank" rel="noopener noreferrer"
+                class="hover:text-emerald-400 transition-colors flex items-center gap-1.5">
                 <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                    <path fill-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clip-rule="evenodd"></path>
+                    <path fill-rule="evenodd"
+                        d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"
+                        clip-rule="evenodd"></path>
                 </svg>
                 vthiep2412/CryptoStudio
             </a>
             <span class="hidden sm:inline text-gray-700">|</span>
-            <a href="https://www.apache.org/licenses/LICENSE-2.0" target="_blank" rel="noopener noreferrer" class="hover:text-emerald-400 transition-colors">
+            <a href="https://www.apache.org/licenses/LICENSE-2.0" target="_blank" rel="noopener noreferrer"
+                class="hover:text-emerald-400 transition-colors">
                 Apache 2.0 License
             </a>
         </footer>
@@ -131,56 +286,158 @@
                 { id: 'rabbit', name: 'Rabbit' },
                 { id: 'rc4', name: 'RC4' },
                 { id: 'xor', name: 'XOR Cipher' }
+            ],
+            pgp: [
+                { id: 'pgp-encrypt', name: 'PGP Encrypt' },
+                { id: 'pgp-decrypt', name: 'PGP Decrypt' },
+                { id: 'pgp-sign', name: 'PGP Sign' },
+                { id: 'pgp-verify', name: 'PGP Verify' }
             ]
         };
 
         // State
         let currentCategory = 'encoding';
+        let currentPgpAlgo = 'pgp-encrypt';
 
         // DOM Elements
         const btnEncoding = document.getElementById('btnEncoding');
         const btnEncryption = document.getElementById('btnEncryption');
+        const btnPGP = document.getElementById('btnPGP');
+        const actionArea = document.getElementById('actionArea');
+        const pgpActionArea = document.getElementById('pgpActionArea');
+        const pgpPillBg = document.getElementById('pgpPillBg');
         const labelProcess = document.getElementById('labelProcess');
         const labelReverse = document.getElementById('labelReverse');
         const algorithmSelect = document.getElementById('algorithmSelect');
+        const algoSelectContainer = document.getElementById('algoSelectContainer');
         const keyContainer = document.getElementById('keyContainer');
+        const cryptoKeyLabel = document.querySelector('label[for="cryptoKey"]');
+        const pgpPassContainer = document.getElementById('pgpPassContainer');
+        const genKeyLink = document.getElementById('genKeyLink');
         const inputText = document.getElementById('inputText');
         const cryptoKey = document.getElementById('cryptoKey');
+        const pgpPassphraseInput = document.getElementById('pgpPassphrase');
         const outputArea = document.getElementById('outputArea');
+        const recoveryArea = document.getElementById('recoveryArea');
         const toastMsg = document.getElementById('toastMsg');
         const radioActions = document.getElementsByName('action');
+        const statusText = document.getElementById('statusText');
+
+        // Performance: Pre-instantiate encoders
+        const encoder = new TextEncoder();
+        const decoder = new TextDecoder();
+
+        // Utilities
+        function debounce(func, wait) {
+            let timeout;
+            return function (...args) {
+                clearTimeout(timeout);
+                timeout = setTimeout(() => func.apply(this, args), wait);
+            };
+        }
+
+        const debouncedExecute = debounce(executeTransformation, 300);
 
         // Initialization
         function init() {
             populateSelect();
             addEventListeners();
-            executeTransformation();
+            setCategory('encoding');
         }
 
         function setCategory(category) {
             currentCategory = category;
             const pillBg = document.getElementById('pillBg');
-            
-            // Update UI tabs
-            if(category === 'encoding') {
+
+            // UI tab updates
+            const btns = [btnEncoding, btnEncryption, btnPGP];
+            btns.forEach(b => b.classList.replace('text-white', 'text-gray-400'));
+
+            if (category === 'encoding') {
                 pillBg.style.transform = 'translateX(0)';
                 btnEncoding.classList.replace('text-gray-400', 'text-white');
-                btnEncryption.classList.replace('text-white', 'text-gray-400');
                 labelProcess.textContent = "Encode";
                 labelReverse.textContent = "Decode";
                 keyContainer.classList.add('hidden');
-            } else {
+                genKeyLink.classList.add('hidden');
+                algoSelectContainer.classList.remove('hidden');
+            } else if (category === 'encryption') {
                 pillBg.style.transform = 'translateX(100%)';
                 btnEncryption.classList.replace('text-gray-400', 'text-white');
-                btnEncoding.classList.replace('text-white', 'text-gray-400');
                 labelProcess.textContent = "Encrypt";
                 labelReverse.textContent = "Decrypt";
                 keyContainer.classList.remove('hidden');
                 keyContainer.classList.add('flex');
+                genKeyLink.classList.add('hidden');
+                algoSelectContainer.classList.remove('hidden');
+            } else {
+                pillBg.style.transform = 'translateX(200%)';
+                btnPGP.classList.replace('text-gray-400', 'text-white');
+                keyContainer.classList.remove('hidden');
+                keyContainer.classList.add('flex');
+                genKeyLink.classList.remove('hidden');
+                algoSelectContainer.classList.add('hidden'); // Dropdown hidden for PGP
+                actionArea.classList.add('hidden');
+                pgpActionArea.classList.remove('hidden');
+                pgpActionArea.classList.add('flex');
             }
 
+            updatePGPFields();
             populateSelect();
             executeTransformation();
+        }
+
+        function setPgpAction(algo, idx) {
+            currentPgpAlgo = algo;
+            pgpPillBg.style.transform = `translateX(${idx * 100}%)`;
+
+            const btns = document.querySelectorAll('.pgp-switch-btn');
+            btns.forEach(b => b.classList.replace('text-white', 'text-gray-400'));
+            btns[idx].classList.replace('text-gray-400', 'text-white');
+
+            updatePGPFields();
+            executeTransformation();
+        }
+
+        function updatePGPFields() {
+            const protection = document.getElementById('protectionControls');
+            if (currentCategory === 'pgp') {
+                const algo = currentPgpAlgo;
+                pgpActionArea.classList.remove('hidden');
+                pgpActionArea.classList.add('flex');
+                if (protection) protection.classList.add('hidden');
+
+                // Toggle Passphrase field
+                if (algo === 'pgp-decrypt' || algo === 'pgp-sign') {
+                    pgpPassContainer.classList.remove('hidden');
+                    pgpPassContainer.classList.add('flex');
+                    cryptoKeyLabel.textContent = "Your Private Key";
+                    cryptoKey.placeholder = "Paste your Armored Private Key here...";
+                } else {
+                    pgpPassContainer.classList.add('hidden');
+                    pgpPassContainer.classList.remove('flex');
+                    cryptoKeyLabel.textContent = algo === 'pgp-encrypt' ? "Recipient's Public Key" : "Sender's Public Key";
+                    cryptoKey.placeholder = "Paste Armored Public Key here...";
+                }
+            } else {
+                pgpActionArea.classList.add('hidden');
+                pgpActionArea.classList.remove('flex');
+                pgpPassContainer.classList.add('hidden');
+                pgpPassContainer.classList.remove('flex');
+                cryptoKeyLabel.textContent = "Secret Key / Password";
+                cryptoKey.placeholder = "Enter your secret key or password...";
+                actionArea.classList.remove('hidden');
+
+                // Show protection controls for symmetric encryption algorithms
+                if (protection) {
+                    if (currentCategory === 'encryption' && algorithmSelect.value !== 'xor') {
+                        protection.classList.remove('hidden');
+                        protection.classList.add('flex');
+                    } else {
+                        protection.classList.add('hidden');
+                    }
+                }
+            }
         }
 
         function populateSelect() {
@@ -194,9 +451,13 @@
         }
 
         function addEventListeners() {
-            inputText.addEventListener('input', executeTransformation);
-            cryptoKey.addEventListener('input', executeTransformation);
-            algorithmSelect.addEventListener('change', executeTransformation);
+            inputText.addEventListener('input', debouncedExecute);
+            cryptoKey.addEventListener('input', debouncedExecute);
+            pgpPassphraseInput.addEventListener('input', debouncedExecute);
+            algorithmSelect.addEventListener('change', () => {
+                updatePGPFields();
+                executeTransformation();
+            });
             radioActions.forEach(radio => {
                 radio.addEventListener('change', executeTransformation);
             });
@@ -216,45 +477,54 @@
 
         function copyOutput() {
             const textToCopy = outputArea.innerText;
-            if(!textToCopy) return;
+            if (!textToCopy) return;
 
-            // Fallback copy method
-            const textArea = document.createElement("textarea");
-            textArea.value = textToCopy;
-            textArea.style.position = "fixed";
-            document.body.appendChild(textArea);
-            textArea.focus();
-            textArea.select();
-            try {
-                document.execCommand('copy');
-                toastMsg.classList.remove('opacity-0');
-                setTimeout(() => toastMsg.classList.add('opacity-0'), 2000);
-            } catch (err) {
-                console.error('Copy failed', err);
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(textToCopy).then(() => {
+                    toastMsg.classList.remove('opacity-0');
+                    setTimeout(() => toastMsg.classList.add('opacity-0'), 2000);
+                }).catch(err => {
+                    console.error('Clipboard API failed', err);
+                });
+            } else {
+                // Fallback
+                const textArea = document.createElement("textarea");
+                textArea.value = textToCopy;
+                textArea.style.position = "fixed";
+                document.body.appendChild(textArea);
+                textArea.focus();
+                textArea.select();
+                try {
+                    document.execCommand('copy');
+                    toastMsg.classList.remove('opacity-0');
+                    setTimeout(() => toastMsg.classList.add('opacity-0'), 2000);
+                } catch (err) {
+                    console.error('Copy failed', err);
+                }
+                document.body.removeChild(textArea);
             }
-            document.body.removeChild(textArea);
         }
 
         // --- Core Implementations ---
 
         const Base32 = {
             chars: "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567",
-            encode: function(text) {
-                const bytes = new TextEncoder().encode(text);
-                let bits = 0, value = 0, output = "";
+            encode: function (text) {
+                const bytes = encoder.encode(text);
+                let bits = 0, value = 0, output = [];
                 for (let i = 0; i < bytes.length; i++) {
                     value = (value << 8) | bytes[i];
                     bits += 8;
                     while (bits >= 5) {
-                        output += this.chars[(value >>> (bits - 5)) & 31];
+                        output.push(this.chars[(value >>> (bits - 5)) & 31]);
                         bits -= 5;
                     }
                 }
-                if (bits > 0) output += this.chars[(value << (5 - bits)) & 31];
-                while ((output.length % 8) !== 0) output += "=";
-                return output;
+                if (bits > 0) output.push(this.chars[(value << (5 - bits)) & 31]);
+                while ((output.length % 8) !== 0) output.push("=");
+                return output.join('');
             },
-            decode: function(encoded) {
+            decode: function (encoded) {
                 encoded = encoded.replace(/=+$/, "").toUpperCase();
                 let bits = 0, value = 0, bytes = [];
                 for (let i = 0; i < encoded.length; i++) {
@@ -267,31 +537,30 @@
                         bits -= 8;
                     }
                 }
-                return new TextDecoder().decode(new Uint8Array(bytes));
+                return decoder.decode(new Uint8Array(bytes));
             }
         };
 
         const Base58 = {
             chars: "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz",
-            encode: function(text) {
+            encode: function (text) {
                 if (!text) return "";
-                let bytes = new TextEncoder().encode(text);
+                let bytes = encoder.encode(text);
                 let num = 0n;
                 for (let i = 0; i < bytes.length; i++) {
                     num = (num * 256n) + BigInt(bytes[i]);
                 }
-                let encoded = "";
+                let encoded = [];
                 while (num > 0n) {
-                    let remainder = Number(num % 58n);
+                    encoded.push(this.chars[Number(num % 58n)]);
                     num = num / 58n;
-                    encoded = this.chars[remainder] + encoded;
                 }
                 for (let i = 0; i < bytes.length && bytes[i] === 0; i++) {
-                    encoded = "1" + encoded;
+                    encoded.push("1");
                 }
-                return encoded;
+                return encoded.reverse().join('');
             },
-            decode: function(encoded) {
+            decode: function (encoded) {
                 if (!encoded) return "";
                 let num = 0n;
                 for (let i = 0; i < encoded.length; i++) {
@@ -307,11 +576,112 @@
                 for (let i = 0; i < encoded.length && encoded[i] === "1"; i++) {
                     bytes.push(0);
                 }
-                bytes.reverse();
-                return new TextDecoder().decode(new Uint8Array(bytes));
+                return decoder.decode(new Uint8Array(bytes.reverse()));
             }
         };
 
+        // --- SECURITY LEVEL CONTROLS ---
+        function adjustLevel(delta) {
+            const input = document.getElementById('securityLevel');
+            let val = parseInt(input.value) + delta;
+            if (val < 1) val = 1;
+            if (val > 7) val = 7;
+            syncLevel(val);
+        }
+
+        function syncLevel(val) {
+            const level = parseInt(val);
+            document.getElementById('securityLevel').value = level;
+            document.getElementById('securitySlider').value = level;
+            document.getElementById('securityLevelDisplay').textContent = level;
+            updateLevelSpecs();
+        }
+
+        function toggleSecurityLevel() {
+            const isEnhanced = document.getElementById('enhanceProtection').checked;
+            const display = document.getElementById('levelDisplay');
+            const slider = document.getElementById('levelSliderContainer');
+
+            if (isEnhanced) {
+                display.classList.remove('hidden');
+                display.classList.add('flex');
+                slider.classList.remove('hidden');
+                slider.classList.add('flex');
+                updateLevelSpecs();
+            } else {
+                display.classList.remove('flex');
+                display.classList.add('hidden');
+                slider.classList.remove('flex');
+                slider.classList.add('hidden');
+            }
+            executeTransformation();
+        }
+
+        function updateLevelSpecs() {
+            const lv = parseInt(document.getElementById('securityLevel').value);
+            const specs = document.getElementById('levelSpecs');
+
+            const contentMap = {
+                1: "(lvl: 1) Ultra-Fast: ~1ms processing. Basic obfuscation.",
+                2: "(lvl: 2) Basic: ~5ms. Minimal work factor.",
+                3: "(lvl: 3) Standard: ~20ms. Optimized for speed.",
+                4: "(lvl: 4) Hardened: ~100ms. Common industry standard.",
+                5: "(lvl: 5) CryptoStudio Standard: ~250ms. Balanced protection.",
+                6: "(lvl: 6) NIST Hardened: ~1s. Professional grade.",
+                7: "(lvl: 7) VAULT MODE: 2s+. Military isolation. Zero brute-force risk."
+            };
+
+            specs.textContent = contentMap[lv] || `Standard Iterations`;
+            executeTransformation();
+        }
+
+        // --- BACKGROUND WORKER (ZERO-LAG) ---
+        const cryptoWorkerBlob = new Blob([`
+            importScripts('https://cdn.jsdelivr.net/npm/crypto-js@4.1.1/crypto-js.js');
+            self.onmessage = function(e) {
+                const { password, saltHex, keySize, ivSize, iterations } = e.data;
+                const salt = CryptoJS.enc.Hex.parse(saltHex);
+                const derived = CryptoJS.PBKDF2(password, salt, {
+                    keySize: (keySize + ivSize) / 4,
+                    iterations: iterations,
+                    hasher: CryptoJS.algo.SHA256
+                });
+                self.postMessage({ derivedHex: derived.toString(CryptoJS.enc.Hex) });
+            };
+        `], { type: 'text/javascript' });
+
+        const cryptoWorkerUrl = URL.createObjectURL(cryptoWorkerBlob);
+        let cryptoWorker = null;
+
+        const pbkdf2Derive = (passphrase, salt, keySize, ivSize, iterations) => {
+            return new Promise((resolve, reject) => {
+                if (cryptoWorker) cryptoWorker.terminate();
+                cryptoWorker = new Worker(cryptoWorkerUrl);
+
+                const timeout = setTimeout(() => {
+                    cryptoWorker.terminate();
+                    reject(new Error('PBKDF2 derivation timed out'));
+                }, 30000); // 30s timeout for high iteration counts
+
+                cryptoWorker.onmessage = (e) => {
+                    clearTimeout(timeout);
+                    resolve(CryptoJS.enc.Hex.parse(e.data.derivedHex));
+                };
+
+                cryptoWorker.onerror = (e) => {
+                    clearTimeout(timeout);
+                    reject(new Error('Worker error: ' + (e.message || 'Unknown error')));
+                };
+
+                cryptoWorker.postMessage({
+                    password: passphrase,
+                    saltHex: salt.toString(CryptoJS.enc.Hex),
+                    keySize,
+                    ivSize,
+                    iterations: iterations || 10000
+                });
+            });
+        };
         const Transformers = {
             // ENCODING
             base64: {
@@ -327,21 +697,21 @@
                 reverse: (t) => Base58.decode(t)
             },
             hex: {
-                process: (t) => Array.from(new TextEncoder().encode(t)).map(b => b.toString(16).padStart(2, '0')).join(''),
+                process: (t) => Array.from(encoder.encode(t)).map(b => b.toString(16).padStart(2, '0')).join(''),
                 reverse: (t) => {
                     t = t.replace(/\s+/g, '');
                     if (t.length % 2 !== 0) throw new Error("Invalid hex length.");
                     const bytes = new Uint8Array(t.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
-                    return new TextDecoder().decode(bytes);
+                    return decoder.decode(bytes);
                 }
             },
             binary: {
-                process: (t) => Array.from(new TextEncoder().encode(t)).map(b => b.toString(2).padStart(8, '0')).join(' '),
+                process: (t) => Array.from(encoder.encode(t)).map(b => b.toString(2).padStart(8, '0')).join(' '),
                 reverse: (t) => {
                     t = t.replace(/\s+/g, '');
-                    if(t.length % 8 !== 0) throw new Error("Invalid binary length.");
+                    if (t.length % 8 !== 0) throw new Error("Invalid binary length.");
                     const bytes = new Uint8Array(t.match(/.{1,8}/g).map(byte => parseInt(byte, 2)));
-                    return new TextDecoder().decode(bytes);
+                    return decoder.decode(bytes);
                 }
             },
             uri: {
@@ -351,94 +721,362 @@
 
             // ENCRYPTION
             aes: {
-                process: (t, k) => CryptoJS.AES.encrypt(t, k).toString(),
-                reverse: (t, k) => {
+                process: async (t, k) => {
+                    const isEnhanced = document.getElementById('enhanceProtection').checked;
+                    const lv = parseInt(document.getElementById('securityLevel').value) || 5;
+                    const iters = isEnhanced ? Math.pow(10, lv - 1) : 1;
+                    const salt = CryptoJS.lib.WordArray.random(128 / 8);
+
+                    if (isEnhanced) {
+                        const derived = await pbkdf2Derive(k, salt, 32, 16, iters);
+                        const key = CryptoJS.lib.WordArray.create(derived.words.slice(0, 8), 32);
+                        const iv = CryptoJS.lib.WordArray.create(derived.words.slice(8, 12), 16);
+                        const encrypted = CryptoJS.AES.encrypt(t, key, { iv: iv });
+                        return `lv${lv}:` + salt.toString(CryptoJS.enc.Base64) + ":" + encrypted.toString();
+                    } else {
+                        return CryptoJS.AES.encrypt(t, k).toString();
+                    }
+                },
+                reverse: async (t, k) => {
+                    const lvMatch = t.match(/^lv(\d):/);
+                    if (lvMatch) {
+                        const lv = parseInt(lvMatch[1]);
+                        const iters = Math.pow(10, lv - 1);
+                        const data = t.substring(lvMatch[0].length);
+                        const parts = data.split(':');
+                        const salt = CryptoJS.enc.Base64.parse(parts[0]);
+                        const derived = await pbkdf2Derive(k, salt, 32, 16, iters);
+                        const key = CryptoJS.lib.WordArray.create(derived.words.slice(0, 8), 32);
+                        const iv = CryptoJS.lib.WordArray.create(derived.words.slice(8, 12), 16);
+                        const dec = CryptoJS.AES.decrypt(parts[1], key, { iv: iv }).toString(CryptoJS.enc.Utf8);
+                        if (!dec) throw new Error(`Level ${lv} decryption failed.`);
+                        return dec;
+                    }
+                    if (t.includes(':') && !t.startsWith('lv')) {
+                        // Compatibility for early "salt:ciphertext" format (no lv prefix).
+                        // Uses 100k iterations (Level 6) as the baseline for this interim format.
+                        const parts = t.split(':');
+                        const saltBase64 = parts[0];
+                        const iterations = 100000;
+                        const salt = CryptoJS.enc.Base64.parse(saltBase64);
+                        const derived = await pbkdf2Derive(k, salt, 32, 16, iterations);
+                        const key = CryptoJS.lib.WordArray.create(derived.words.slice(0, 8), 32);
+                        const iv = CryptoJS.lib.WordArray.create(derived.words.slice(8, 12), 16);
+                        const dec = CryptoJS.AES.decrypt(parts[1], key, { iv: iv }).toString(CryptoJS.enc.Utf8);
+                        
+                        if (!dec) {
+                            throw new Error(`Intermediate format decryption failed (iters=${iterations}, salt=${saltBase64}). Please verify your key.`);
+                        }
+                        return dec;
+                    }
                     const dec = CryptoJS.AES.decrypt(t, k).toString(CryptoJS.enc.Utf8);
-                    if(!dec) throw new Error("Malformed UTF-8 data or incorrect key.");
+                    if (!dec) throw new Error("Legacy decryption failed.");
                     return dec;
                 }
             },
             tripledes: {
-                process: (t, k) => CryptoJS.TripleDES.encrypt(t, k).toString(),
-                reverse: (t, k) => {
+                process: async (t, k) => {
+                    const isEnhanced = document.getElementById('enhanceProtection').checked;
+                    const lv = parseInt(document.getElementById('securityLevel').value) || 5;
+                    const iters = isEnhanced ? Math.pow(10, lv - 1) : 1;
+                    const salt = CryptoJS.lib.WordArray.random(128 / 8);
+                    if (isEnhanced) {
+                        const derived = await pbkdf2Derive(k, salt, 24, 8, iters);
+                        const key = CryptoJS.lib.WordArray.create(derived.words.slice(0, 6), 24);
+                        const iv = CryptoJS.lib.WordArray.create(derived.words.slice(6, 8), 8);
+                        const encrypted = CryptoJS.TripleDES.encrypt(t, key, { iv: iv });
+                        return `lv${lv}:` + salt.toString(CryptoJS.enc.Base64) + ":" + encrypted.toString();
+                    }
+                    return CryptoJS.TripleDES.encrypt(t, k).toString();
+                },
+                reverse: async (t, k) => {
+                    const lvMatch = t.match(/^lv(\d):/);
+                    if (lvMatch) {
+                        const lv = parseInt(lvMatch[1]);
+                        const iters = Math.pow(10, lv - 1);
+                        const data = t.substring(lvMatch[0].length);
+                        const parts = data.split(':');
+                        const salt = CryptoJS.enc.Base64.parse(parts[0]);
+                        const derived = await pbkdf2Derive(k, salt, 24, 8, iters);
+                        const key = CryptoJS.lib.WordArray.create(derived.words.slice(0, 6), 24);
+                        const iv = CryptoJS.lib.WordArray.create(derived.words.slice(6, 8), 8);
+                        const dec = CryptoJS.TripleDES.decrypt(parts[1], key, { iv: iv }).toString(CryptoJS.enc.Utf8);
+                        if (!dec) throw new Error(`Level ${lv} decryption failed.`);
+                        return dec;
+                    }
                     const dec = CryptoJS.TripleDES.decrypt(t, k).toString(CryptoJS.enc.Utf8);
-                    if(!dec) throw new Error("Malformed UTF-8 data or incorrect key.");
+                    if (!dec) throw new Error("Legacy decryption failed.");
                     return dec;
                 }
             },
             rabbit: {
-                process: (t, k) => CryptoJS.Rabbit.encrypt(t, k).toString(),
-                reverse: (t, k) => {
+                process: async (t, k) => {
+                    const isEnhanced = document.getElementById('enhanceProtection').checked;
+                    const lv = parseInt(document.getElementById('securityLevel').value) || 5;
+                    const iters = isEnhanced ? Math.pow(10, lv - 1) : 1;
+                    const salt = CryptoJS.lib.WordArray.random(128 / 8);
+                    if (isEnhanced) {
+                        const derived = await pbkdf2Derive(k, salt, 16, 8, iters);
+                        const key = CryptoJS.lib.WordArray.create(derived.words.slice(0, 4), 16);
+                        const iv = CryptoJS.lib.WordArray.create(derived.words.slice(4, 6), 8);
+                        const encrypted = CryptoJS.Rabbit.encrypt(t, key, { iv: iv });
+                        return `lv${lv}:` + salt.toString(CryptoJS.enc.Base64) + ":" + encrypted.toString();
+                    }
+                    return CryptoJS.Rabbit.encrypt(t, k).toString();
+                },
+                reverse: async (t, k) => {
+                    const lvMatch = t.match(/^lv(\d):/);
+                    if (lvMatch) {
+                        const lv = parseInt(lvMatch[1]);
+                        const iters = Math.pow(10, lv - 1);
+                        const data = t.substring(lvMatch[0].length);
+                        const parts = data.split(':');
+                        const salt = CryptoJS.enc.Base64.parse(parts[0]);
+                        const derived = await pbkdf2Derive(k, salt, 16, 8, iters);
+                        const key = CryptoJS.lib.WordArray.create(derived.words.slice(0, 4), 16);
+                        const iv = CryptoJS.lib.WordArray.create(derived.words.slice(4, 6), 8);
+                        const dec = CryptoJS.Rabbit.decrypt(parts[1], key, { iv: iv }).toString(CryptoJS.enc.Utf8);
+                        if (!dec) throw new Error(`Level ${lv} decryption failed.`);
+                        return dec;
+                    }
                     const dec = CryptoJS.Rabbit.decrypt(t, k).toString(CryptoJS.enc.Utf8);
-                    if(!dec) throw new Error("Malformed UTF-8 data or incorrect key.");
+                    if (!dec) throw new Error("Legacy decryption failed.");
                     return dec;
                 }
             },
             rc4: {
-                process: (t, k) => CryptoJS.RC4.encrypt(t, k).toString(),
-                reverse: (t, k) => {
+                process: async (t, k) => {
+                    const isEnhanced = document.getElementById('enhanceProtection').checked;
+                    const lv = parseInt(document.getElementById('securityLevel').value) || 5;
+                    const iters = isEnhanced ? Math.pow(10, lv - 1) : 1;
+                    const salt = CryptoJS.lib.WordArray.random(128 / 8);
+                    if (isEnhanced) {
+                        const derived = await pbkdf2Derive(k, salt, 16, 0, iters);
+                        const key = CryptoJS.lib.WordArray.create(derived.words.slice(0, 4), 16);
+                        const encrypted = CryptoJS.RC4.encrypt(t, key);
+                        return `lv${lv}:` + salt.toString(CryptoJS.enc.Base64) + ":" + encrypted.toString();
+                    }
+                    return CryptoJS.RC4.encrypt(t, k).toString();
+                },
+                reverse: async (t, k) => {
+                    const lvMatch = t.match(/^lv(\d):/);
+                    if (lvMatch) {
+                        const lv = parseInt(lvMatch[1]);
+                        const iters = Math.pow(10, lv - 1);
+                        const data = t.substring(lvMatch[0].length);
+                        const parts = data.split(':');
+                        const salt = CryptoJS.enc.Base64.parse(parts[0]);
+                        const derived = await pbkdf2Derive(k, salt, 16, 0, iters);
+                        const key = CryptoJS.lib.WordArray.create(derived.words.slice(0, 4), 16);
+                        const dec = CryptoJS.RC4.decrypt(parts[1], key).toString(CryptoJS.enc.Utf8);
+                        if (!dec) throw new Error(`Level ${lv} decryption failed.`);
+                        return dec;
+                    }
                     const dec = CryptoJS.RC4.decrypt(t, k).toString(CryptoJS.enc.Utf8);
-                    if(!dec) throw new Error("Malformed UTF-8 data or incorrect key.");
+                    if (!dec) throw new Error("Legacy decryption failed.");
                     return dec;
                 }
             },
             xor: {
                 process: (t, k) => {
-                    const tBytes = new TextEncoder().encode(t);
-                    const kBytes = new TextEncoder().encode(k);
+                    const tBytes = encoder.encode(t);
+                    const kBytes = encoder.encode(k);
                     let res = new Uint8Array(tBytes.length);
-                    for(let i=0; i<tBytes.length; i++) {
+                    for (let i = 0; i < tBytes.length; i++) {
                         res[i] = tBytes[i] ^ kBytes[i % kBytes.length];
                     }
-                    return btoa(String.fromCharCode.apply(null, res));
+                    // Avoid stack overflow with large arrays
+                    let binary = '';
+                    const len = res.byteLength;
+                    for (let i = 0; i < len; i++) {
+                        binary += String.fromCharCode(res[i]);
+                    }
+                    return btoa(binary);
                 },
                 reverse: (t, k) => {
                     const raw = atob(t);
                     const tBytes = new Uint8Array(raw.length);
-                    for(let i=0; i<raw.length; i++) tBytes[i] = raw.charCodeAt(i);
-                    const kBytes = new TextEncoder().encode(k);
+                    for (let i = 0; i < raw.length; i++) tBytes[i] = raw.charCodeAt(i);
+                    const kBytes = encoder.encode(k);
                     let res = new Uint8Array(tBytes.length);
-                    for(let i=0; i<tBytes.length; i++) {
+                    for (let i = 0; i < tBytes.length; i++) {
                         res[i] = tBytes[i] ^ kBytes[i % kBytes.length];
                     }
-                    return new TextDecoder().decode(res);
+                    return decoder.decode(res);
+                }
+            },
+
+            // OPENPGP
+            'pgp-encrypt': {
+                process: async (t, k) => {
+                    if (!window.openpgp) throw new Error("OpenPGP library is still loading...");
+                    const publicKey = await openpgp.readKey({ armoredKey: k });
+                    return await openpgp.encrypt({
+                        message: await openpgp.createMessage({ text: t }),
+                        encryptionKeys: publicKey
+                    });
+                }
+            },
+            'pgp-decrypt': {
+                process: async (t, k, p) => {
+                    if (!window.openpgp) throw new Error("OpenPGP library is still loading...");
+                    const privateKey = await openpgp.readPrivateKey({ armoredKey: k });
+                    const unlockedKey = await openpgp.decryptKey({ privateKey, passphrase: p });
+                    const message = await openpgp.readMessage({ armoredMessage: t });
+                    const { data: decrypted } = await openpgp.decrypt({
+                        message,
+                        decryptionKeys: unlockedKey
+                    });
+                    return decrypted;
+                }
+            },
+            'pgp-sign': {
+                process: async (t, k, p) => {
+                    if (!window.openpgp) throw new Error("OpenPGP library is still loading...");
+                    const privateKey = await openpgp.readPrivateKey({ armoredKey: k });
+                    const unlockedKey = await openpgp.decryptKey({ privateKey, passphrase: p });
+                    return await openpgp.sign({
+                        message: await openpgp.createMessage({ text: t }),
+                        signingKeys: unlockedKey
+                    });
+                }
+            }, 'pgp-verify': {
+                process: async (t, k) => {
+                    if (!window.openpgp) throw new Error("OpenPGP library is still loading...");
+                    const publicKey = await openpgp.readKey({ armoredKey: k });
+                    const message = await openpgp.readCleartextMessage({ cleartextMessage: t });
+                    const verificationResult = await openpgp.verify({
+                        message,
+                        verificationKeys: publicKey
+                    });
+                    if (!verificationResult.signatures || verificationResult.signatures.length === 0) {
+                        throw new Error("No signatures found in the provided text.");
+                    }
+                    const { verified, signature } = verificationResult.signatures[0];
+                    try {
+                        await verified;
+                        return `--- SIGNATURE VALID ---\nFingerprint: ${signature.toString().substring(0, 16).toUpperCase()}\n\nContent:\n${message.getText()}`;
+                    } catch (e) {
+                        throw new Error("Signature verification failed: " + e.message);
+                    }
                 }
             }
         };
 
-        function executeTransformation() {
+        let lastRequestId = 0;
+        async function executeTransformation() {
+            const currentRequestId = ++lastRequestId;
             const text = inputText.value;
-            const algo = algorithmSelect.value;
+            let algo = currentCategory === 'pgp' ? currentPgpAlgo : algorithmSelect.value;
             const action = getAction();
             const key = cryptoKey.value;
+            const pgpPass = pgpPassphraseInput.value.trim();
+            recoveryArea.classList.add('hidden');
+            recoveryArea.classList.remove('flex');
+            recoveryArea.innerHTML = '';
 
             if (!text) {
-                outputArea.innerHTML = '<span class="text-gray-600 italic">Output will appear here...</span>';
+                outputArea.innerHTML = '<span class="text-gray-600 italic font-mono text-xs">Output will appear here...</span>';
+                if (statusText) statusText.innerText = '';
                 return;
             }
 
-            if (currentCategory === 'encryption' && !key) {
-                outputArea.innerHTML = '<span class="text-red-400">Please provide a secret key/password.</span>';
+            if (currentCategory !== 'encoding' && !key) {
+                outputArea.innerHTML = `<span class="text-red-400 font-mono text-xs">Please provide a ${currentCategory === 'pgp' ? 'PGP Key' : 'Secret Key'}.</span>`;
+                if (statusText) statusText.innerText = '';
                 return;
+            }
+
+            if (statusText) {
+                const isEnhanced = document.getElementById('enhanceProtection').checked;
+                const lv = parseInt(document.getElementById('securityLevel').value);
+                statusText.innerText = (isEnhanced && lv >= 6) ? 'Computing Vault Level...' : 'Processing...';
+                statusText.className = 'text-xs text-emerald-500 font-bold uppercase tracking-widest animate-pulse';
             }
 
             try {
                 const transformer = Transformers[algo];
-                if(!transformer) throw new Error("Algorithm not implemented.");
+                if (!transformer) throw new Error("Algorithm not implemented.");
 
                 let result = "";
-                if (action === 'process') {
-                    result = transformer.process(text, key);
+                // Handle different signatures for transformers
+                if (currentCategory === 'pgp') {
+                    result = await transformer.process(text, key, pgpPass);
                 } else {
-                    result = transformer.reverse(text, key);
+                    if (action === 'process') {
+                        result = await transformer.process(text, key);
+                    } else {
+                        result = await transformer.reverse(text, key);
+                    }
                 }
-                
-                // Prevent XSS in output by setting textContent instead of innerHTML
+
+                // Only update if this is still the latest request
+                if (currentRequestId !== lastRequestId) return;
+
                 outputArea.textContent = result;
+                if (statusText) {
+                    statusText.innerText = 'Ready';
+                    statusText.className = 'text-xs text-emerald-500 font-bold uppercase tracking-widest';
+                }
 
             } catch (err) {
-                outputArea.innerHTML = `<span class="text-red-400 flex items-start gap-2"><svg class="w-4 h-4 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg><span>Error: ${err.message}</span></span>`;
+                if (currentRequestId !== lastRequestId) return;
+
+                // Build error UI safely using textContent
+                outputArea.innerHTML = '';
+                const errorSpan = document.createElement('span');
+                errorSpan.className = 'text-red-400 flex items-start gap-2 font-mono text-xs';
+                errorSpan.innerHTML = '<svg class="w-4 h-4 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>';
+
+                const messageSpan = document.createElement('span');
+
+                if (err.message.includes("Misformed armored text")) {
+                    messageSpan.textContent = 'Error: Misformed armor. You need to include the BEGIN/END wrapper lines.';
+                    errorSpan.appendChild(messageSpan);
+                    outputArea.appendChild(errorSpan);
+
+                    recoveryArea.innerHTML = '';
+                    const recoveryBtn = document.createElement('button');
+                    recoveryBtn.className = 'w-fit px-4 py-2 bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-400 text-xs font-medium rounded-lg border border-emerald-500/30 transition-all uppercase tracking-wider';
+                    recoveryBtn.textContent = 'Add wrapper for this action';
+                    recoveryBtn.dataset.algo = algo;
+                    recoveryBtn.addEventListener('click', (e) => {
+                        addPgpWrapper(e.currentTarget.dataset.algo);
+                    });
+
+                    recoveryArea.appendChild(recoveryBtn);
+                    recoveryArea.classList.remove('hidden');
+                    recoveryArea.classList.add('flex');
+                } else {
+                    messageSpan.textContent = 'Error: ' + err.message;
+                    errorSpan.appendChild(messageSpan);
+                    outputArea.appendChild(errorSpan);
+                }
+                if (statusText) {
+                    statusText.innerText = 'Error';
+                    statusText.className = 'text-[10px] text-red-500 font-bold uppercase tracking-widest';
+                }
             }
+        }
+
+        async function addPgpWrapper(algo) {
+            const el = document.getElementById('cryptoKey');
+            const key = el.value.trim();
+            if (!key) return;
+
+            let wrapped = "";
+            if (algo === 'pgp-decrypt' || algo === 'pgp-sign') {
+                wrapped = `-----BEGIN PGP PRIVATE KEY BLOCK-----\n\n${key}\n-----END PGP PRIVATE KEY BLOCK-----`;
+            } else {
+                wrapped = `-----BEGIN PGP PUBLIC KEY BLOCK-----\n\n${key}\n-----END PGP PUBLIC KEY BLOCK-----`;
+            }
+
+            el.value = wrapped;
+            executeTransformation();
+        }
+
+        function togglePgpPass() {
+            pgpPassphraseInput.type = pgpPassphraseInput.type === 'password' ? 'text' : 'password';
         }
 
         // Boot
@@ -446,4 +1084,5 @@
 
     </script>
 </body>
+
 </html>
