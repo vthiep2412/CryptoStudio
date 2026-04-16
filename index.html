@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Crypto & Encoding Studio</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- TODO: Add auto update intergrity check!!! -->
+    <!-- TODO: Consider pinning versions and updating SRI hashes periodically -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <script type="module">
         import * as openpgp from 'https://cdn.jsdelivr.net/npm/openpgp@6.1.1/dist/openpgp.min.mjs';
@@ -712,7 +712,7 @@
             const contentMap = {
                 1: "(lvl: 1) INSECURE: Extreme brute-force risk!",
                 2: "(lvl: 2) WEAK: Minimal work factor. For non-sensitive data.",
-                3: "(lvl: 3) NOT RECOMMENDED: For low work factor. ",
+                3: "(lvl: 3) NOT RECOMMENDED: Low work factor.",
                 4: "(lvl: 4) Hardened: ~100ms. Common industry standard.",
                 5: "(lvl: 5) CryptoStudio Standard: ~250ms. Balanced protection.",
                 6: "(lvl: 6) NIST Web Standard: ~1s. Professional grade.",
@@ -739,6 +739,7 @@
                 importScripts('https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js');
             } catch (e) {
                 self.postMessage({ error: 'Failed to load CryptoJS: ' + e.message });
+                return; // Prevent further handler setup
             }
 
             self.onmessage = function(e) {
@@ -805,11 +806,11 @@
             };
 
             const t = clean(input);
-            if (!t) throw new Error("the correct give error from the engine");
+            if (!t) throw new Error("Decryption failed. Please verify your input.");
 
             async function tryLevel(saltB64, ciphertext, lv) {
                 try {
-                    const iters = (lv === 6) ? 100000 : Math.pow(10, lv - 1);
+                    const iters = Math.pow(10, lv - 1);
                     const salt = CryptoJS.enc.Base64.parse(saltB64);
                     const derived = await pbkdf2Derive(passphrase, salt, keySize, ivSize, iters);
                     const key = CryptoJS.lib.WordArray.create(derived.words.slice(0, keySize / 4), keySize);
@@ -842,6 +843,7 @@
                 cipherPart = parts[1];
             }
 
+            // Brute-force attempt: try user's selected level first, then all others for backward compatibility
             if (saltPart && cipherPart) {
                 const selectedLv = parseInt(document.getElementById('securityLevel').value) || 5;
                 const levels = [selectedLv, 1, 2, 3, 4, 5, 6];
@@ -860,7 +862,7 @@
                 if (rawDec) return rawDec;
             } catch (e) { }
 
-            throw new Error("the correct give error from the engine");
+            throw new Error("Decryption failed. Please verify your key and security level.");
         }
 
         const Transformers = {
@@ -1139,11 +1141,7 @@
                     recoveryArea.classList.remove('hidden');
                     recoveryArea.classList.add('flex');
                 } else {
-                    if (err.message === "the correct give error from the engine") {
-                        messageSpan.textContent = err.message;
-                    } else {
-                        messageSpan.textContent = 'Error: ' + err.message;
-                    }
+                    messageSpan.textContent = 'Error: ' + err.message;
                     errorSpan.appendChild(messageSpan);
                     outputArea.appendChild(errorSpan);
                 }

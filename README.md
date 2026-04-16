@@ -15,10 +15,11 @@ Quickly transform data between popular formats:
 ### 🛡️ Symmetric Encryption
 Secure your sensitive information with multiple algorithms:
 - **AES (Advanced Encryption Standard)**: The gold standard for modern encryption.
-- **TripleDES, Rabbit, RC4**: Legacy and specialized ciphers.
-- **XOR Cipher**: Simple, fast bitwise obfuscation.
+- **Rabbit**: Specialized cipher for stream encryption.
+- **⚠️ Legacy/Insecure Ciphers** (NOT recommended for sensitive data): TripleDES, RC4, XOR.
 - **🚀 Enhanced Protection (Vault Mode)**: Up to 7 levels of PBKDF2 key derivation iterations. Level 7 ("Vault Mode") provides extreme resistance against brute-force attacks by introducing significant computational work.
-### **Warning**: Levels 1-3 are INSECURE and not recommended for sensitive data. ALSO RC4,TRIPLEDES,XOR ARE INSECURE AND NOT RECOMMENDED FOR SENSITIVE DATA.
+
+> **⚠️ Security Notice**: Iteration levels 1-3 provide insufficient protection and should not be used for sensitive data. Always use level 4 or higher for production use.
 
 ### 🔑 PGP (Pretty Good Privacy)
 Full suite of OpenPGP tools powered by `openpgp.js`:
