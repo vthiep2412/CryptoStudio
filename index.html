@@ -16,28 +16,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        body {
-            font-family: 'Inter', sans-serif;
-        }
-
-        .custom-scrollbar::-webkit-scrollbar {
-            width: 8px;
-        }
-
-        .custom-scrollbar::-webkit-scrollbar-track {
-            background: #1f2937;
-        }
-
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-            background: #4b5563;
-            border-radius: 4px;
-        }
-
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-            background: #6b7280;
-        }
-    </style>
+    <link rel="stylesheet" href="index.css">
 </head>
 
 <body class="bg-gray-950 text-gray-100 min-h-screen p-4 sm:p-8 flex flex-col items-center">
@@ -157,8 +136,36 @@
                                     </div>
                                 </div>
                                 <span
-                                    class="text-xs text-gray-400 font-bold uppercase tracking-wider group-hover:text-emerald-400 transition-colors">Enhance
+                                    class="text-xs text-gray-400 font-bold uppercase tracking-wider group-hover:text-emerald-400 transition-colors shrink-0">Enhance
                                     Protection</span>
+                                <div class="relative group/tooltip inline-block">
+                                    <div
+                                        class="w-3.5 h-3.5 flex items-center justify-center rounded-full border border-gray-600 text-[10px] text-gray-500 group-hover/tooltip:border-emerald-500 group-hover/tooltip:text-emerald-500 cursor-help transition-all font-black">
+                                        ?</div>
+                                    <div
+                                        class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover/tooltip:block w-64 p-3 bg-gray-900 border border-gray-800 rounded-lg shadow-2xl z-50 pointer-events-none">
+                                        <p class="text-[10px] text-gray-300 leading-relaxed font-medium">
+                                            <span class="text-emerald-400 font-bold block mb-1">Vault Mode Key
+                                                Hardening</span>
+                                            Adds customizable PBKDF2 iterations to protect against brute-force attacks.
+                                            This hardening is unique to CryptoStudio. Manual configuration of salt and
+                                            iterations is required for decryption on other platforms.
+                                            <br>
+                                            <span
+                                                class="text-emerald-400 border-t border-gray-800 font-bold block mt-1">Iteration
+                                                over
+                                                levels:</span>
+                                            <span
+                                                class="block pt-2 text-[11px] text-gray-400 font-mono tracking-tight text-center">
+                                                L1: 1 | L2: 10 | L3: 100 | L4: 1,000<br>
+                                                L5: 10,000 | L6: 100k | L7: 1M
+                                            </span>
+                                        </p>
+                                        <div
+                                            class="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-gray-800">
+                                        </div>
+                                    </div>
+                                </div>
                             </label>
                             <div id="levelDisplay" class="hidden items-center gap-3">
                                 <button onclick="adjustLevel(-1)"
@@ -633,36 +640,46 @@
             chars: "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz",
             encode: function (text) {
                 if (!text) return "";
-                let bytes = encoder.encode(text);
-                let num = 0n;
-                for (let i = 0; i < bytes.length; i++) {
-                    num = (num * 256n) + BigInt(bytes[i]);
+                const bytes = Array.from(encoder.encode(text));
+                const digits = [];
+                for (const byte of bytes) {
+                    let carry = byte;
+                    for (let j = 0; j < digits.length; j++) {
+                        carry += digits[j] << 8;
+                        digits[j] = carry % 58;
+                        carry = (carry / 58) | 0;
+                    }
+                    while (carry > 0) {
+                        digits.push(carry % 58);
+                        carry = (carry / 58) | 0;
+                    }
                 }
-                let encoded = [];
-                while (num > 0n) {
-                    encoded.push(this.chars[Number(num % 58n)]);
-                    num = num / 58n;
+                let res = digits.reverse().map(d => this.chars[d]).join("");
+                for (const byte of bytes) {
+                    if (byte === 0) res = this.chars[0] + res;
+                    else break;
                 }
-                for (let i = 0; i < bytes.length && bytes[i] === 0; i++) {
-                    encoded.push("1");
-                }
-                return encoded.reverse().join('');
+                return res;
             },
             decode: function (encoded) {
                 if (!encoded) return "";
-                let num = 0n;
-                for (let i = 0; i < encoded.length; i++) {
-                    let p = this.chars.indexOf(encoded[i]);
-                    if (p < 0) throw new Error("Invalid Base58 character.");
-                    num = (num * 58n) + BigInt(p);
+                const bytes = [];
+                for (const char of encoded) {
+                    let carry = this.chars.indexOf(char);
+                    if (carry < 0) throw new Error("Invalid Base58 character.");
+                    for (let j = 0; j < bytes.length; j++) {
+                        carry += bytes[j] * 58;
+                        bytes[j] = carry % 256;
+                        carry = (carry / 256) | 0;
+                    }
+                    while (carry > 0) {
+                        bytes.push(carry % 256);
+                        carry = (carry / 256) | 0;
+                    }
                 }
-                let bytes = [];
-                while (num > 0n) {
-                    bytes.push(Number(num % 256n));
-                    num = num / 256n;
-                }
-                for (let i = 0; i < encoded.length && encoded[i] === "1"; i++) {
-                    bytes.push(0);
+                for (const char of encoded) {
+                    if (char === this.chars[0]) bytes.push(0);
+                    else break;
                 }
                 return decoder.decode(new Uint8Array(bytes.reverse()));
             }
@@ -734,37 +751,17 @@
         }
 
         // --- BACKGROUND WORKER (ZERO-LAG) ---
-        const cryptoWorkerBlob = new Blob([`
-            try {
-                importScripts('https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js');
-            } catch (e) {
-                self.postMessage({ error: 'Failed to load CryptoJS: ' + e.message });
-                return; // Prevent further handler setup
-            }
-
-            self.onmessage = function(e) {
-                if (typeof CryptoJS === 'undefined') {
-                    self.postMessage({ error: 'CryptoJS is not loaded in worker' });
-                    return;
-                }
-                const { password, saltHex, keySize, ivSize, iterations } = e.data;
-                const salt = CryptoJS.enc.Hex.parse(saltHex);
-                const derived = CryptoJS.PBKDF2(password, salt, {
-                    keySize: (keySize + ivSize) / 4,
-                    iterations: iterations,
-                    hasher: CryptoJS.algo.SHA256
-                });
-                self.postMessage({ derivedHex: derived.toString(CryptoJS.enc.Hex) });
-            };
-        `], { type: 'text/javascript' });
-
-        const cryptoWorkerUrl = URL.createObjectURL(cryptoWorkerBlob);
         let cryptoWorker = null;
 
         const pbkdf2Derive = (passphrase, salt, keySize, ivSize, iterations) => {
             return new Promise((resolve, reject) => {
                 if (cryptoWorker) cryptoWorker.terminate();
-                cryptoWorker = new Worker(cryptoWorkerUrl);
+                try {
+                    cryptoWorker = new Worker('worker.js');
+                } catch (e) {
+                    reject(new Error('Failed to instantiate worker: ' + e.message));
+                    return;
+                }
 
                 const timeout = setTimeout(() => {
                     cryptoWorker.terminate();

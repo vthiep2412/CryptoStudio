@@ -1,0 +1,26 @@
+{
+  "name": "cryptostudio",
+  "version": "1.0.0",
+  "description": "CryptoStudio is a premium, privacy-first web application designed for seamless string conversion, encoding, and industrial-grade encryption—all handled entirely within your browser.",
+  "main": "worker.js",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vthiep2412/CryptoStudio.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/vthiep2412/CryptoStudio/issues"
+  },
+  "homepage": "https://github.com/vthiep2412/CryptoStudio#readme",
+  "devDependencies": {
+    "vite": "^8.0.8"
+  }
+}
