@@ -18,6 +18,7 @@ Secure your sensitive information with multiple algorithms:
 - **TripleDES, Rabbit, RC4**: Legacy and specialized ciphers.
 - **XOR Cipher**: Simple, fast bitwise obfuscation.
 - **🚀 Enhanced Protection (Vault Mode)**: Up to 7 levels of PBKDF2 key derivation iterations. Level 7 ("Vault Mode") provides extreme resistance against brute-force attacks by introducing significant computational work.
+### **Warning**: Levels 1-3 are INSECURE and not recommended for sensitive data. ALSO RC4,TRIPLEDES,XOR ARE INSECURE AND NOT RECOMMENDED FOR SENSITIVE DATA.
 
 ### 🔑 PGP (Pretty Good Privacy)
 Full suite of OpenPGP tools powered by `openpgp.js`:
@@ -26,7 +27,7 @@ Full suite of OpenPGP tools powered by `openpgp.js`:
 - **Key Generation**: Dedicated generator for **RSA (2048/4096)** and **ECC (Curve25519)** keys.
 
 ### 💎 Premium User Experience
-- **Zero-Lag Interface**: High-iteration cryptographic tasks are offloaded to **Web Workers**, keeping the UI responsive.
+- **Responsive Interface**: High-iteration cryptographic tasks are offloaded to **Web Workers**, keeping the UI responsive.
 - **Security First**: All operations are performed locally. No data ever leaves your machine or is sent to a server.
 - **Modern Aesthetics**: A sleek, dark-themed UI built with **TailwindCSS** and refined with **Inter** and **JetBrains Mono** typography.
 - **Secure Key Bundling**: Download your generated PGP keys in a password-protected (ZipCrypto) ZIP archive.

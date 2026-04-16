@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PGP Key Generator | CryptoStudio</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- TODO: Add auto update intergrity check!!! -->
     <script src="https://cdn.jsdelivr.net/npm/@zip.js/zip.js@2.7.53/dist/zip-full.min.js"></script>
     <script type="module">
         import * as openpgp from 'https://cdn.jsdelivr.net/npm/openpgp@6.1.1/dist/openpgp.min.mjs';
@@ -86,12 +87,12 @@
                     <h2 class="text-sm font-semibold uppercase tracking-widest text-emerald-500">Identity Details</h2>
                     <div class="grid grid-cols-2 gap-4">
                         <div class="space-y-1.5">
-                            <label class="text-xs text-slate-500 font-medium">Full Name</label>
+                            <label for="userName" class="text-xs text-slate-500 font-medium">Full Name</label>
                             <input type="text" id="userName" placeholder="John Doe"
                                 class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm focus:ring-1 focus:ring-emerald-500 outline-none transition-all">
                         </div>
                         <div class="space-y-1.5">
-                            <label class="text-xs text-slate-500 font-medium">Email Address</label>
+                            <label for="userEmail" class="text-xs text-slate-500 font-medium">Email Address</label>
                             <input type="email" id="userEmail" placeholder="john@doe.com"
                                 class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm focus:ring-1 focus:ring-emerald-500 outline-none transition-all">
                         </div>
@@ -187,7 +188,7 @@
                     <div class="flex flex-col h-1/2 min-h-0">
                         <div class="flex justify-between items-end mb-1.5">
                             <span class="text-[10px] text-slate-500 font-bold uppercase">Public Key (share this)</span>
-                            <button onclick="copyKey('pub')"
+                            <button onclick="copyKey('pub', event)"
                                 class="text-[10px] text-emerald-500 hover:underline">Copy</button>
                         </div>
                         <pre id="publicKeyArea"
@@ -198,7 +199,7 @@
                         <div class="flex justify-between items-end mb-1.5">
                             <span class="text-[10px] text-red-500/70 font-bold uppercase">Private Key (Keep
                                 Secret)</span>
-                            <button onclick="copyKey('priv')"
+                            <button onclick="copyKey('priv', event)"
                                 class="text-[10px] text-emerald-500 hover:underline">Copy</button>
                         </div>
                         <pre id="privateKeyArea"
@@ -210,7 +211,7 @@
                         class="hidden bg-emerald-500/5 border border-emerald-500/10 rounded-xl p-3 space-y-2">
                         <span class="text-[10px] text-emerald-500 font-bold uppercase block">Packaging Details</span>
                         <div class="flex justify-between items-center text-[10px]">
-                            <span class="text-slate-500 uppercase">ZIP Password (Passphrase)</span>
+                            <span class="text-slate-500 uppercase">ZIP Password (Used PGP Passphrase)</span>
                             <span id="displayPass" class="mono text-emerald-400 font-medium"></span>
                         </div>
                     </div>
@@ -219,7 +220,7 @@
                 <div class="mt-6 flex gap-3">
                     <button onclick="downloadKeys()" id="downloadBtn" disabled
                         class="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-lg transition-colors disabled:opacity-30 disabled:cursor-not-allowed">
-                        DOWNLOAD AS .zip
+                        DOWNLOAD AS .zip (Password: Your Passphrase)
                     </button>
                     <button onclick="location.reload()"
                         class="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold rounded-lg transition-colors">
@@ -242,6 +243,7 @@
     </div>
 
     <script>
+        const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         let currentAlgo = 'ecc';
         let isPassphraseValid = false;
 
@@ -339,7 +341,7 @@
 
         inputs.name.addEventListener('input', updateGenerateState);
         inputs.email.addEventListener('input', () => {
-            const isValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(inputs.email.value);
+            const isValid = EMAIL_REGEX.test(inputs.email.value);
             if (inputs.email.value && !isValid) {
                 inputs.email.classList.add('focus:ring-red-500', 'border-red-500/50');
                 inputs.email.classList.remove('focus:ring-emerald-500', 'border-slate-800');
@@ -433,7 +435,7 @@
             if (!window.openpgp) return; // Still initializing
 
             const isNameValid = inputs.name.value.trim().length > 0;
-            const isEmailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(inputs.email.value);
+            const isEmailValid = EMAIL_REGEX.test(inputs.email.value);
 
             if (isPassphraseValid && isNameValid && isEmailValid) {
                 ui.generateBtn.disabled = false;
@@ -497,23 +499,38 @@
             }
         }
 
-        function copyKey(type) {
+        async function copyKey(type, event) {
             const el = type === 'pub' ? ui.publicKeyArea : ui.privateKeyArea;
             const text = el.innerText;
             if (!text) return;
-            navigator.clipboard.writeText(text);
-            const btn = event.target;
-            const original = btn.innerText;
-            btn.innerText = 'Copied!';
-            setTimeout(() => btn.innerText = original, 2000);
+
+            const btn = event?.target;
+            const original = btn?.innerText;
+            try {
+                await navigator.clipboard.writeText(text);
+                if (btn) {
+                    btn.innerText = 'Copied!';
+                    setTimeout(() => btn.innerText = original, 2000);
+                }
+            } catch (err) {
+                if (btn) {
+                    btn.innerText = 'Failed';
+                    setTimeout(() => btn.innerText = original, 2000);
+                }
+            }
         }
 
         async function downloadKeys() {
             const pub = ui.publicKeyArea.innerText;
             const priv = ui.privateKeyArea.innerText;
-            const pass = 'private'; // just to ensure, no need to be passphrase
+            const pass = ui.passphrase.value;
 
             if (!pub || !priv) return;
+
+            if (!pass) {
+                alert('A passphrase is required to protect the ZIP archive.');
+                return;
+            }
 
             // Readiness Check
             if (typeof zip === 'undefined' || !zip.ZipWriter) {
@@ -525,16 +542,17 @@
             ui.downloadBtn.innerText = 'PACKAGING...';
 
             try {
-                // Initialize writer WITH global password for forced protection
-                const zipWriter = new zip.ZipWriter(new zip.BlobWriter("application/zip"), { password: pass, zipCrypto: true });
+                // Initialize writer
+                const zipWriter = new zip.ZipWriter(new zip.BlobWriter("application/zip"));
 
-                // Add all files WITH password (ZipCrypto)
-                await zipWriter.add("public_key.asc", new zip.TextReader(pub), { password: pass, zipCrypto: true });
-                await zipWriter.add("private_key.asc", new zip.TextReader(priv), { password: pass, zipCrypto: true });
+                // Add all files with AES-256 protection
+                const addOptions = { password: pass, encryptionMethod: "aes" };
+
+                await zipWriter.add("public_key.asc", new zip.TextReader(pub), addOptions);
+                await zipWriter.add("private_key.asc", new zip.TextReader(priv), addOptions);
 
                 // Also encrypt helper files so the password prompt triggers immediately
-                await zipWriter.add(`ZIP_PASSWORD_IS_${pass}.txt`, new zip.TextReader("This file name contains the password for the keys."), { password: pass, zipCrypto: true });
-                await zipWriter.add("README_SECURITY_NOTE.txt", new zip.TextReader(`CRYPTOSTUDIO PGP BUNDLE\n\n- The key files are encrypted for security.\n- ACCESS PASSWORD: ${pass}\n\nGenerated via CryptoStudio locally in-browser.`), { password: pass, zipCrypto: true });
+                await zipWriter.add(`SECURITY_NOTE.txt`, new zip.TextReader(`CRYPTOSTUDIO PGP BUNDLE\n\n- Files are encrypted using AES-256.\n- PASS: Use your PGP passphrase.`), addOptions);
 
                 const blob = await zipWriter.close();
                 const url = URL.createObjectURL(blob);

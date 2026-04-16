@@ -6,10 +6,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Crypto & Encoding Studio</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- TODO: Add auto update intergrity check!!! -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <script type="module">
         import * as openpgp from 'https://cdn.jsdelivr.net/npm/openpgp@6.1.1/dist/openpgp.min.mjs';
         window.openpgp = openpgp;
+        window.dispatchEvent(new CustomEvent('openpgp-ready'));
     </script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -67,8 +69,8 @@
                     <button id="btnEncryption"
                         class="relative flex-1 py-2 px-1 z-10 text-gray-400 hover:text-white font-medium transition-colors text-[10px] sm:text-xs md:text-sm"
                         onclick="setCategory('encryption')">Encryption</button>
-                    <button id="btnPGP"
-                        class="relative flex-1 py-2 px-1 z-10 text-gray-400 hover:text-white font-medium transition-colors text-[10px] sm:text-xs md:text-sm"
+                    <button id="btnPGP" disabled
+                        class="relative flex-1 py-2 px-1 z-10 text-gray-600 font-medium transition-colors text-[10px] sm:text-xs md:text-sm cursor-not-allowed"
                         onclick="setCategory('pgp')">Pretty Good Privacy</button>
                 </div>
 
@@ -323,6 +325,77 @@
         const radioActions = document.getElementsByName('action');
         const statusText = document.getElementById('statusText');
 
+        const statusPhrases = [
+            "Distilling logic",
+            "Processing data",
+            "Inhaling data",
+            "Creating entropy",
+            "Sifting chaos",
+            "Refining noise",
+            "Folding logic",
+            "Parsing shadows"
+        ];
+
+        let statusAnimationInterval = null;
+        let phraseCycleInterval = null;
+        function setAnimatedStatus(target, onComplete) {
+            if (statusAnimationInterval) clearInterval(statusAnimationInterval);
+            const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789#$@&";
+            const current = statusText.innerText || "";
+            const maxLength = Math.max(current.length, target.length);
+            let iteration = 0;
+
+            statusAnimationInterval = setInterval(() => {
+                let display = "";
+                let complete = true;
+
+                for (let i = 0; i < maxLength; i++) {
+                    const stagger = i * 2;
+                    const lockTime = stagger + 8; // More frames of scrambling
+
+                    if (iteration >= lockTime) {
+                        display += target[i] || "";
+                    } else if (iteration >= stagger) {
+                        display += chars[Math.floor(Math.random() * chars.length)];
+                        complete = false;
+                    } else {
+                        display += current[i] || "";
+                        complete = false;
+                    }
+                }
+
+                statusText.innerText = display;
+                if (complete) {
+                    clearInterval(statusAnimationInterval);
+                    statusText.innerText = target;
+                    if (onComplete) onComplete();
+                }
+                iteration++;
+            }, 40);
+        }
+
+        function startStatusCycling() {
+            if (phraseCycleInterval) clearTimeout(phraseCycleInterval);
+
+            const update = () => {
+                const phrase = statusPhrases[Math.floor(Math.random() * statusPhrases.length)];
+                setAnimatedStatus(phrase, () => {
+                    // Wait at least 0.5s after animation finishes before starting next one
+                    phraseCycleInterval = setTimeout(update, 1000);
+                });
+            };
+
+            update();
+        }
+
+        function stopStatusCycling(finalTarget) {
+            if (phraseCycleInterval) {
+                clearTimeout(phraseCycleInterval);
+                phraseCycleInterval = null;
+            }
+            setAnimatedStatus(finalTarget);
+        }
+
         // Performance: Pre-instantiate encoders
         const encoder = new TextEncoder();
         const decoder = new TextDecoder();
@@ -343,6 +416,17 @@
             populateSelect();
             addEventListeners();
             setCategory('encoding');
+
+            window.addEventListener('openpgp-ready', () => {
+                btnPGP.disabled = false;
+                btnPGP.classList.replace('text-gray-600', 'text-gray-400');
+                btnPGP.classList.replace('cursor-not-allowed', 'hover:text-white');
+            });
+
+            // Check if already ready (rare race condition if module finishes very fast)
+            if (window.openpgp) {
+                window.dispatchEvent(new CustomEvent('openpgp-ready'));
+            }
         }
 
         function setCategory(category) {
@@ -472,6 +556,10 @@
 
         function clearInput() {
             inputText.value = '';
+            if (statusText) {
+                statusText.className = 'text-xs text-slate-500 uppercase font-black tracking-widest';
+                stopStatusCycling('Idle');
+            }
             executeTransformation();
         }
 
@@ -622,23 +710,42 @@
             const specs = document.getElementById('levelSpecs');
 
             const contentMap = {
-                1: "(lvl: 1) Ultra-Fast: ~1ms processing. Basic obfuscation.",
-                2: "(lvl: 2) Basic: ~5ms. Minimal work factor.",
-                3: "(lvl: 3) Standard: ~20ms. Optimized for speed.",
+                1: "(lvl: 1) INSECURE: Extreme brute-force risk!",
+                2: "(lvl: 2) WEAK: Minimal work factor. For non-sensitive data.",
+                3: "(lvl: 3) NOT RECOMMENDED: For low work factor. ",
                 4: "(lvl: 4) Hardened: ~100ms. Common industry standard.",
                 5: "(lvl: 5) CryptoStudio Standard: ~250ms. Balanced protection.",
-                6: "(lvl: 6) NIST Hardened: ~1s. Professional grade.",
-                7: "(lvl: 7) VAULT MODE: 2s+. Military isolation. Zero brute-force risk."
+                6: "(lvl: 6) NIST Web Standard: ~1s. Professional grade.",
+                7: "(lvl: 7) Military Grade: 2s+. Isolated, zero brute-force risk."
             };
 
             specs.textContent = contentMap[lv] || `Standard Iterations`;
+
+            // Apply aggressive warning style for levels 1-3
+            if (lv <= 3) {
+                specs.classList.add('text-red-500', 'font-black');
+                specs.classList.remove('text-slate-500');
+            } else {
+                specs.classList.remove('text-red-500', 'font-black');
+                specs.classList.add('text-slate-500');
+            }
+
             executeTransformation();
         }
 
         // --- BACKGROUND WORKER (ZERO-LAG) ---
         const cryptoWorkerBlob = new Blob([`
-            importScripts('https://cdn.jsdelivr.net/npm/crypto-js@4.1.1/crypto-js.js');
+            try {
+                importScripts('https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js');
+            } catch (e) {
+                self.postMessage({ error: 'Failed to load CryptoJS: ' + e.message });
+            }
+
             self.onmessage = function(e) {
+                if (typeof CryptoJS === 'undefined') {
+                    self.postMessage({ error: 'CryptoJS is not loaded in worker' });
+                    return;
+                }
                 const { password, saltHex, keySize, ivSize, iterations } = e.data;
                 const salt = CryptoJS.enc.Hex.parse(saltHex);
                 const derived = CryptoJS.PBKDF2(password, salt, {
@@ -665,11 +772,17 @@
 
                 cryptoWorker.onmessage = (e) => {
                     clearTimeout(timeout);
-                    resolve(CryptoJS.enc.Hex.parse(e.data.derivedHex));
+                    if (e.data.error) {
+                        cryptoWorker.terminate();
+                        reject(new Error(e.data.error));
+                    } else {
+                        resolve(CryptoJS.enc.Hex.parse(e.data.derivedHex));
+                    }
                 };
 
                 cryptoWorker.onerror = (e) => {
                     clearTimeout(timeout);
+                    cryptoWorker.terminate();
                     reject(new Error('Worker error: ' + (e.message || 'Unknown error')));
                 };
 
@@ -682,6 +795,74 @@
                 });
             });
         };
+
+        async function resilientDecryption(input, passphrase, keySize, ivSize, decryptFn) {
+            const clean = (str) => {
+                return str.trim()
+                    .replace(/=/g, '')
+                    .replace(/^[:]+|[:]+$/g, '')
+                    .replace(/:+/g, ':');
+            };
+
+            const t = clean(input);
+            if (!t) throw new Error("the correct give error from the engine");
+
+            async function tryLevel(saltB64, ciphertext, lv) {
+                try {
+                    const iters = (lv === 6) ? 100000 : Math.pow(10, lv - 1);
+                    const salt = CryptoJS.enc.Base64.parse(saltB64);
+                    const derived = await pbkdf2Derive(passphrase, salt, keySize, ivSize, iters);
+                    const key = CryptoJS.lib.WordArray.create(derived.words.slice(0, keySize / 4), keySize);
+                    const iv = (ivSize > 0) ? CryptoJS.lib.WordArray.create(derived.words.slice(keySize / 4, (keySize + ivSize) / 4), ivSize) : null;
+                    const options = iv ? { iv: iv } : {};
+                    const dec = decryptFn(ciphertext, key, options).toString(CryptoJS.enc.Utf8);
+                    return dec || null;
+                } catch (e) { return null; }
+            }
+
+            // 1. Modern Prefix Detection (lvN:salt:cipher)
+            const lvMatch = t.match(/^lv(\d):/);
+            if (lvMatch) {
+                const lv = parseInt(lvMatch[1]);
+                const parts = t.substring(lvMatch[0].length).split(':');
+                if (parts.length >= 2) {
+                    const res = await tryLevel(parts[0], parts[1], lv);
+                    if (res) return res;
+                }
+            }
+
+            // 2. Automated Bruting (Level 1-5 + Compatibility Level 6)
+            const parts = t.split(':');
+            let saltPart = null, cipherPart = null;
+            if (lvMatch && parts.length >= 3) {
+                saltPart = parts[1];
+                cipherPart = parts[2];
+            } else if (!lvMatch && parts.length >= 2) {
+                saltPart = parts[0];
+                cipherPart = parts[1];
+            }
+
+            if (saltPart && cipherPart) {
+                const selectedLv = parseInt(document.getElementById('securityLevel').value) || 5;
+                const levels = [selectedLv, 1, 2, 3, 4, 5, 6];
+                const seen = new Set();
+                for (const l of levels) {
+                    if (seen.has(l)) continue;
+                    seen.add(l);
+                    const res = await tryLevel(saltPart, cipherPart, l);
+                    if (res) return res;
+                }
+            }
+
+            // 3. Raw Legacy Fallback
+            try {
+                const rawDec = decryptFn(input.trim(), passphrase).toString(CryptoJS.enc.Utf8);
+                if (rawDec) return rawDec;
+            } catch (e) { }
+
+            throw new Error("the correct give error from the engine");
+        }
+
         const Transformers = {
             // ENCODING
             base64: {
@@ -737,42 +918,7 @@
                         return CryptoJS.AES.encrypt(t, k).toString();
                     }
                 },
-                reverse: async (t, k) => {
-                    const lvMatch = t.match(/^lv(\d):/);
-                    if (lvMatch) {
-                        const lv = parseInt(lvMatch[1]);
-                        const iters = Math.pow(10, lv - 1);
-                        const data = t.substring(lvMatch[0].length);
-                        const parts = data.split(':');
-                        const salt = CryptoJS.enc.Base64.parse(parts[0]);
-                        const derived = await pbkdf2Derive(k, salt, 32, 16, iters);
-                        const key = CryptoJS.lib.WordArray.create(derived.words.slice(0, 8), 32);
-                        const iv = CryptoJS.lib.WordArray.create(derived.words.slice(8, 12), 16);
-                        const dec = CryptoJS.AES.decrypt(parts[1], key, { iv: iv }).toString(CryptoJS.enc.Utf8);
-                        if (!dec) throw new Error(`Level ${lv} decryption failed.`);
-                        return dec;
-                    }
-                    if (t.includes(':') && !t.startsWith('lv')) {
-                        // Compatibility for early "salt:ciphertext" format (no lv prefix).
-                        // Uses 100k iterations (Level 6) as the baseline for this interim format.
-                        const parts = t.split(':');
-                        const saltBase64 = parts[0];
-                        const iterations = 100000;
-                        const salt = CryptoJS.enc.Base64.parse(saltBase64);
-                        const derived = await pbkdf2Derive(k, salt, 32, 16, iterations);
-                        const key = CryptoJS.lib.WordArray.create(derived.words.slice(0, 8), 32);
-                        const iv = CryptoJS.lib.WordArray.create(derived.words.slice(8, 12), 16);
-                        const dec = CryptoJS.AES.decrypt(parts[1], key, { iv: iv }).toString(CryptoJS.enc.Utf8);
-                        
-                        if (!dec) {
-                            throw new Error(`Intermediate format decryption failed (iters=${iterations}, salt=${saltBase64}). Please verify your key.`);
-                        }
-                        return dec;
-                    }
-                    const dec = CryptoJS.AES.decrypt(t, k).toString(CryptoJS.enc.Utf8);
-                    if (!dec) throw new Error("Legacy decryption failed.");
-                    return dec;
-                }
+                reverse: async (t, k) => resilientDecryption(t, k, 32, 16, CryptoJS.AES.decrypt)
             },
             tripledes: {
                 process: async (t, k) => {
@@ -789,25 +935,7 @@
                     }
                     return CryptoJS.TripleDES.encrypt(t, k).toString();
                 },
-                reverse: async (t, k) => {
-                    const lvMatch = t.match(/^lv(\d):/);
-                    if (lvMatch) {
-                        const lv = parseInt(lvMatch[1]);
-                        const iters = Math.pow(10, lv - 1);
-                        const data = t.substring(lvMatch[0].length);
-                        const parts = data.split(':');
-                        const salt = CryptoJS.enc.Base64.parse(parts[0]);
-                        const derived = await pbkdf2Derive(k, salt, 24, 8, iters);
-                        const key = CryptoJS.lib.WordArray.create(derived.words.slice(0, 6), 24);
-                        const iv = CryptoJS.lib.WordArray.create(derived.words.slice(6, 8), 8);
-                        const dec = CryptoJS.TripleDES.decrypt(parts[1], key, { iv: iv }).toString(CryptoJS.enc.Utf8);
-                        if (!dec) throw new Error(`Level ${lv} decryption failed.`);
-                        return dec;
-                    }
-                    const dec = CryptoJS.TripleDES.decrypt(t, k).toString(CryptoJS.enc.Utf8);
-                    if (!dec) throw new Error("Legacy decryption failed.");
-                    return dec;
-                }
+                reverse: async (t, k) => resilientDecryption(t, k, 24, 8, CryptoJS.TripleDES.decrypt)
             },
             rabbit: {
                 process: async (t, k) => {
@@ -824,25 +952,7 @@
                     }
                     return CryptoJS.Rabbit.encrypt(t, k).toString();
                 },
-                reverse: async (t, k) => {
-                    const lvMatch = t.match(/^lv(\d):/);
-                    if (lvMatch) {
-                        const lv = parseInt(lvMatch[1]);
-                        const iters = Math.pow(10, lv - 1);
-                        const data = t.substring(lvMatch[0].length);
-                        const parts = data.split(':');
-                        const salt = CryptoJS.enc.Base64.parse(parts[0]);
-                        const derived = await pbkdf2Derive(k, salt, 16, 8, iters);
-                        const key = CryptoJS.lib.WordArray.create(derived.words.slice(0, 4), 16);
-                        const iv = CryptoJS.lib.WordArray.create(derived.words.slice(4, 6), 8);
-                        const dec = CryptoJS.Rabbit.decrypt(parts[1], key, { iv: iv }).toString(CryptoJS.enc.Utf8);
-                        if (!dec) throw new Error(`Level ${lv} decryption failed.`);
-                        return dec;
-                    }
-                    const dec = CryptoJS.Rabbit.decrypt(t, k).toString(CryptoJS.enc.Utf8);
-                    if (!dec) throw new Error("Legacy decryption failed.");
-                    return dec;
-                }
+                reverse: async (t, k) => resilientDecryption(t, k, 16, 8, CryptoJS.Rabbit.decrypt)
             },
             rc4: {
                 process: async (t, k) => {
@@ -858,24 +968,7 @@
                     }
                     return CryptoJS.RC4.encrypt(t, k).toString();
                 },
-                reverse: async (t, k) => {
-                    const lvMatch = t.match(/^lv(\d):/);
-                    if (lvMatch) {
-                        const lv = parseInt(lvMatch[1]);
-                        const iters = Math.pow(10, lv - 1);
-                        const data = t.substring(lvMatch[0].length);
-                        const parts = data.split(':');
-                        const salt = CryptoJS.enc.Base64.parse(parts[0]);
-                        const derived = await pbkdf2Derive(k, salt, 16, 0, iters);
-                        const key = CryptoJS.lib.WordArray.create(derived.words.slice(0, 4), 16);
-                        const dec = CryptoJS.RC4.decrypt(parts[1], key).toString(CryptoJS.enc.Utf8);
-                        if (!dec) throw new Error(`Level ${lv} decryption failed.`);
-                        return dec;
-                    }
-                    const dec = CryptoJS.RC4.decrypt(t, k).toString(CryptoJS.enc.Utf8);
-                    if (!dec) throw new Error("Legacy decryption failed.");
-                    return dec;
-                }
+                reverse: async (t, k) => resilientDecryption(t, k, 16, 0, CryptoJS.RC4.decrypt)
             },
             xor: {
                 process: (t, k) => {
@@ -885,13 +978,13 @@
                     for (let i = 0; i < tBytes.length; i++) {
                         res[i] = tBytes[i] ^ kBytes[i % kBytes.length];
                     }
-                    // Avoid stack overflow with large arrays
-                    let binary = '';
-                    const len = res.byteLength;
-                    for (let i = 0; i < len; i++) {
-                        binary += String.fromCharCode(res[i]);
+
+                    const parts = [];
+                    const chunkSize = 0x8000; // 32KB
+                    for (let i = 0; i < res.length; i += chunkSize) {
+                        parts.push(String.fromCharCode.apply(null, res.subarray(i, i + chunkSize)));
                     }
-                    return btoa(binary);
+                    return btoa(parts.join(''));
                 },
                 reverse: (t, k) => {
                     const raw = atob(t);
@@ -988,10 +1081,8 @@
             }
 
             if (statusText) {
-                const isEnhanced = document.getElementById('enhanceProtection').checked;
-                const lv = parseInt(document.getElementById('securityLevel').value);
-                statusText.innerText = (isEnhanced && lv >= 6) ? 'Computing Vault Level...' : 'Processing...';
-                statusText.className = 'text-xs text-emerald-500 font-bold uppercase tracking-widest animate-pulse';
+                statusText.className = 'text-xs text-emerald-500 font-bold uppercase tracking-widest';
+                startStatusCycling();
             }
 
             try {
@@ -1015,8 +1106,8 @@
 
                 outputArea.textContent = result;
                 if (statusText) {
-                    statusText.innerText = 'Ready';
                     statusText.className = 'text-xs text-emerald-500 font-bold uppercase tracking-widest';
+                    stopStatusCycling('Ready');
                 }
 
             } catch (err) {
@@ -1048,13 +1139,17 @@
                     recoveryArea.classList.remove('hidden');
                     recoveryArea.classList.add('flex');
                 } else {
-                    messageSpan.textContent = 'Error: ' + err.message;
+                    if (err.message === "the correct give error from the engine") {
+                        messageSpan.textContent = err.message;
+                    } else {
+                        messageSpan.textContent = 'Error: ' + err.message;
+                    }
                     errorSpan.appendChild(messageSpan);
                     outputArea.appendChild(errorSpan);
                 }
                 if (statusText) {
-                    statusText.innerText = 'Error';
                     statusText.className = 'text-[10px] text-red-500 font-bold uppercase tracking-widest';
+                    stopStatusCycling('Error');
                 }
             }
         }
@@ -1063,7 +1158,8 @@
             const el = document.getElementById('cryptoKey');
             const key = el.value.trim();
             if (!key) return;
-
+            // Don't wrap if it already looks like PGP armor
+            if (key.includes('-----BEGIN PGP')) return;
             let wrapped = "";
             if (algo === 'pgp-decrypt' || algo === 'pgp-sign') {
                 wrapped = `-----BEGIN PGP PRIVATE KEY BLOCK-----\n\n${key}\n-----END PGP PRIVATE KEY BLOCK-----`;
