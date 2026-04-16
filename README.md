@@ -19,7 +19,18 @@ Secure your sensitive information with multiple algorithms:
 - **⚠️ Legacy/Insecure Ciphers** (NOT recommended for sensitive data): TripleDES, RC4, XOR.
 - **🚀 Enhanced Protection (Vault Mode)**: Up to 7 levels of PBKDF2 key derivation iterations. Level 7 ("Vault Mode") provides extreme resistance against brute-force attacks by introducing significant computational work.
 
-> **⚠️ Security Notice**: Iteration levels 1-3 provide insufficient protection and should not be used for sensitive data. Always use level 4 or higher for production use.
+> **⚠️ Security Notice**: Iteration levels 1-3 provide insufficient protection and should not be used 
+> **PBKDF2 Iteration Levels:**
+> - Level 1: 1
+> - Level 2: 10
+> - Level 3: 100
+> - Level 4: 1000 (minimum for production)
+> - Level 5: 10000
+> - Level 6: 100000
+> - Level 7: 1000000 \
+\
+> Note: OWASP recommends a minimum of 600,000 iterations for PBKDF2-HMAC-SHA256 as of 2023.
+for sensitive data. Always use level 4 or higher for production use.
 
 ### 🔑 PGP (Pretty Good Privacy)
 Full suite of OpenPGP tools powered by `openpgp.js`:
@@ -27,7 +38,7 @@ Full suite of OpenPGP tools powered by `openpgp.js`:
 - **Sign & Verify**: Ensure message integrity and sender authenticity.
 - **Key Generation**: Dedicated generator for **RSA (2048/4096)** and **ECC (Curve25519)** keys.
 
-### 💎 Premium User Experience
+### 💎 User Experience
 - **Responsive Interface**: High-iteration cryptographic tasks are offloaded to **Web Workers**, keeping the UI responsive.
 - **Security First**: All operations are performed locally. No data ever leaves your machine or is sent to a server.
 - **Modern Aesthetics**: A sleek, dark-themed UI built with **TailwindCSS** and refined with **Inter** and **JetBrains Mono** typography.
@@ -57,4 +68,4 @@ Distributed under the **Apache 2.0 License**. See `LICENSE` for more information
 
 ---
 
-*Handcrafted for privacy and performance.* 🌑✨
+*Handcrafted for privacy and performance.* ✨
