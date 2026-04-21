@@ -184,7 +184,8 @@
                         <input type="password" id="pgpPassphrase" placeholder="Enter passphrase for private key..."
                             class="bg-[var(--bg-card-alt)] border border-[var(--border-card)] text-[var(--text-primary)] text-sm rounded-lg focus:ring-emerald-500 focus:border-emerald-500 block w-full p-2.5 pr-12 outline-none transition-colors">
                         <button id="pgpPassToggle" onclick="togglePgpPass()"
-                            class="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-dim)] hover:text-emerald-400 transition-colors" title="Toggle Visibility">
+                            class="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-dim)] hover:text-emerald-400 transition-colors" title="Toggle Visibility"
+                            aria-label="Toggle passphrase visibility">
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5"><path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"/><circle cx="12" cy="12" r="3"/></svg>
                         </button>
                     </div>
@@ -262,7 +263,7 @@
                 <span class="hidden sm:inline text-gray-700">|</span>
                 <button id="themeToggle" onclick="toggleTheme(event)"
                     class="group w-10 h-10 flex items-center justify-center rounded-full bg-[var(--bg-card-alt)] border border-[var(--border-card)] hover:border-emerald-500 transition-all duration-300 shadow-lg"
-                    title="Toggle Theme">
+                    title="Toggle Theme" aria-label="Toggle dark/light mode">
                     <svg id="sunIcon" class="hidden w-5 h-5 text-emerald-400" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
                     <svg id="moonIcon" class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
@@ -431,8 +432,9 @@
             }
         }
 
-        function setCategory(cat) {
+        function setCategory(cat, save = true) {
             currentCategory = cat;
+            if (save) localStorage.setItem('activeCategory', cat);
             const pill = document.getElementById('pillBg');
 
             // Update active states
@@ -479,8 +481,12 @@
             if (window.initializeCustomDropdowns) initializeCustomDropdowns();
         }
 
-        function setPgpAction(algo, idx) {
+        function setPgpAction(algo, idx, save = true) {
             currentPgpAlgo = algo;
+            if (save) {
+                localStorage.setItem('activePgpAlgo', algo);
+                localStorage.setItem('activePgpIdx', idx);
+            }
             const pill = document.getElementById('pgpPillBg');
             const btns = document.querySelectorAll('.pgp-switch-btn');
 
@@ -1244,6 +1250,11 @@
             const eyeOff = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5"><path d="m15 18-.722-3.25"/><path d="M2 8a10.645 10.645 0 0 0 20 0"/><path d="m20 15-1.726-2.05"/><path d="m4 15 1.726-2.05"/><path d="m9 18 .722-3.25"/></svg>`;
             
             btn.innerHTML = type === 'password' ? eye : eyeOff;
+
+            // Update A11y
+            const label = document.querySelector('label[for="pgpPassphrase"]');
+            if (label) label.innerText = `PGP PASSPHRASE (${type === 'password' ? 'HIDDEN' : 'VISIBLE'})`;
+            btn.setAttribute('aria-pressed', type === 'text');
             
             // Add animation class
             const svg = btn.querySelector('svg');
@@ -1262,16 +1273,25 @@
                 Math.max(y, innerHeight - y)
             );
 
-            if (!document.startViewTransition) {
+            const isTransition = !!document.startViewTransition;
+            
+            const performToggle = () => {
                 document.documentElement.classList.toggle('light');
+                const isLight = document.documentElement.classList.contains('light');
+                localStorage.setItem('theme', isLight ? 'light' : 'dark');
                 updateThemeIcons();
+                
+                // Update meta tag
+                const meta = document.querySelector('meta[name="color-scheme"]');
+                if (meta) meta.content = isLight ? 'light' : 'dark';
+            };
+
+            if (!isTransition) {
+                performToggle();
                 return;
             }
 
-            const transition = document.startViewTransition(() => {
-                document.documentElement.classList.toggle('light');
-                updateThemeIcons();
-            });
+            const transition = document.startViewTransition(performToggle);
 
             transition.ready.then(() => {
                 const clipPath = [
@@ -1413,7 +1433,33 @@
         });
 
         // Boot
+        const savedTheme = localStorage.getItem('theme');
+        const systemPrefersLight = window.matchMedia('(prefers-color-scheme: light)').matches;
+        const isLight = savedTheme === 'light' || (!savedTheme && systemPrefersLight);
+
+        if (isLight) {
+            document.documentElement.classList.add('light');
+            const meta = document.querySelector('meta[name="color-scheme"]');
+            if (meta) meta.content = 'light';
+        } else {
+            document.documentElement.classList.remove('light');
+            const meta = document.querySelector('meta[name="color-scheme"]');
+            if (meta) meta.content = 'dark';
+        }
+        
         init();
+        
+        // Restore tab states
+        const savedCat = localStorage.getItem('activeCategory');
+        if (savedCat) setCategory(savedCat, false);
+        
+        const savedPgpAlgo = localStorage.getItem('activePgpAlgo');
+        const savedPgpIdx = localStorage.getItem('activePgpIdx');
+        if (savedPgpAlgo && savedPgpIdx !== null) {
+            setPgpAction(savedPgpAlgo, parseInt(savedPgpIdx), false);
+        }
+
+        updateThemeIcons();
         initializeCustomDropdowns();
 
     </script>

@@ -8,6 +8,7 @@
     --text-dim: #6b7280;
     --accent: #10b981;
     --accent-hover: #059669;
+
     color-scheme: dark;
 }
 
@@ -19,11 +20,12 @@
     --text-primary: #0f172a;
     --text-secondary: #64748b;
     --text-dim: #94a3b8;
+
     color-scheme: light;
 }
 
 body {
-    font-family: 'Inter', sans-serif;
+    font-family: Inter, sans-serif;
     background-color: var(--bg-app) !important;
     color: var(--text-primary) !important;
 }
@@ -78,10 +80,14 @@ body {
     font-size: 0.875rem;
     cursor: pointer;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    outline: none !important;
     position: relative;
     overflow: hidden;
     user-select: none;
+}
+
+.dropdown-trigger:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
 }
 
 .dropdown-trigger:hover {
@@ -229,7 +235,12 @@ body {
     cursor: pointer;
     border: none;
     background: none;
-    outline: none !important;
+}
+
+.pill-btn:focus-visible {
+    outline: 2px solid #ffffff;
+    outline-offset: -4px;
+    border-radius: 6px;
 }
 
 .pill-btn.active {
