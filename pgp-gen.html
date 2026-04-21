@@ -4,6 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light dark">
     <title>PGP Key Generator | CryptoStudio</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- TODO: Add auto update intergrity check!!! -->
@@ -18,15 +19,16 @@
     <link
         href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
         rel="stylesheet">
+    <link rel="stylesheet" href="index.css">
     <link rel="stylesheet" href="pgp-gen.css">
 </head>
 
-<body class="bg-slate-950 text-slate-100 min-h-screen py-8 px-4">
+<body class="bg-[var(--bg-app)] text-[var(--text-primary)] min-h-screen overflow-auto p-4 sm:p-8 flex flex-col items-center">
 
     <div class="max-w-6xl mx-auto">
         <nav class="mb-4">
             <a href="index.html"
-                class="text-xs font-bold text-slate-500 hover:text-emerald-400 transition-colors tracking-widest uppercase flex items-center gap-2">
+                class="text-xs font-bold text-[var(--text-dim)] hover:text-emerald-400 transition-colors tracking-widest uppercase flex items-center gap-2">
                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                         d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
@@ -34,30 +36,30 @@
                 Back to Studio
             </a>
         </nav>
-        <header class="mb-10 text-center">
+        <header class="mb-6 text-center">
             <h1
                 class="text-3xl font-bold bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent mb-2">
                 Secure PGP Key Generator
             </h1>
-            <p class="text-slate-400 text-sm">Generate industry-standard OpenPGP keys locally in your browser.</p>
+            <p class="text-[var(--text-secondary)] text-sm">Generate industry-standard OpenPGP keys locally in your browser.</p>
         </header>
 
-        <div class="grid grid-cols-1 lg:grid-cols-[1fr_1.5fr] gap-8">
+        <div class="grid grid-cols-1 lg:grid-cols-[1fr_1.5fr] gap-6">
 
             <!-- Configuration Section -->
-            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-2xl space-y-6">
+            <div class="bg-[var(--bg-card)] border border-[var(--border-card)] rounded-3xl p-6 sm:p-8 shadow-2xl space-y-6 transition-all duration-500">
                 <div class="space-y-4">
                     <h2 class="text-sm font-semibold uppercase tracking-widest text-emerald-500">Identity Details</h2>
                     <div class="grid grid-cols-2 gap-4">
                         <div class="space-y-1.5">
-                            <label for="userName" class="text-xs text-slate-500 font-medium">Full Name</label>
+                            <label for="userName" class="text-xs text-[var(--text-dim)] font-medium">Full Name</label>
                             <input type="text" id="userName" placeholder="John Doe"
-                                class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm focus:ring-1 focus:ring-emerald-500 outline-none transition-all">
+                                class="w-full bg-[var(--bg-card-alt)] border border-[var(--border-card)] rounded-lg px-3 py-2 text-sm focus:ring-1 focus:ring-emerald-500 outline-none transition-all text-[var(--text-primary)]">
                         </div>
                         <div class="space-y-1.5">
-                            <label for="userEmail" class="text-xs text-slate-500 font-medium">Email Address</label>
+                            <label for="userEmail" class="text-xs text-[var(--text-dim)] font-medium">Email Address</label>
                             <input type="email" id="userEmail" placeholder="john@doe.com"
-                                class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm focus:ring-1 focus:ring-emerald-500 outline-none transition-all">
+                                class="w-full bg-[var(--bg-card-alt)] border border-[var(--border-card)] rounded-lg px-3 py-2 text-sm focus:ring-1 focus:ring-emerald-500 outline-none transition-all text-[var(--text-primary)]">
                         </div>
                     </div>
                 </div>
@@ -65,16 +67,16 @@
                 <div class="space-y-4">
                     <h2 class="text-sm font-semibold uppercase tracking-widest text-emerald-500">Key Parameters</h2>
                     <div class="space-y-3">
-                        <label class="text-xs text-slate-500 font-medium block">Key Algorithm & Size</label>
+                        <label class="text-xs text-[var(--text-dim)] font-medium block">Key Algorithm & Size</label>
                         <div class="grid grid-cols-3 gap-2">
                             <button onclick="setAlgo('ecc')" id="algo-ecc"
                                 class="algo-btn px-3 py-2 text-xs font-medium rounded-lg border border-emerald-500/30 bg-emerald-500/10 text-emerald-400 transition-all">ECC
                                 (25519)</button>
                             <button onclick="setAlgo('rsa-2048')" id="algo-rsa-2048"
-                                class="algo-btn px-3 py-2 text-xs font-medium rounded-lg border border-slate-800 bg-slate-950 text-slate-400 hover:border-slate-700 transition-all">RSA
+                                class="algo-btn px-3 py-2 text-xs font-medium rounded-lg border border-[var(--border-card)] bg-[var(--bg-card-alt)] text-[var(--text-dim)] hover:border-emerald-500/50 transition-all">RSA
                                 2048</button>
                             <button onclick="setAlgo('rsa-4096')" id="algo-rsa-4096"
-                                class="algo-btn px-3 py-2 text-xs font-medium rounded-lg border border-slate-800 bg-slate-950 text-slate-400 hover:border-slate-700 transition-all">RSA
+                                class="algo-btn px-3 py-2 text-xs font-medium rounded-lg border border-[var(--border-card)] bg-[var(--bg-card-alt)] text-[var(--text-dim)] hover:border-emerald-500/50 transition-all">RSA
                                 4096</button>
                         </div>
                     </div>
@@ -86,45 +88,48 @@
                     <div class="space-y-3">
                         <div class="relative group">
                             <input type="password" id="passphrase" placeholder="Enter a strong passphrase..."
-                                class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2.5 pr-28 text-sm focus:ring-1 focus:ring-emerald-500 outline-none transition-all">
+                                class="w-full bg-[var(--bg-card-alt)] border border-[var(--border-card)] rounded-lg px-3 py-2.5 pr-28 text-sm focus:ring-1 focus:ring-emerald-500 outline-none transition-all text-[var(--text-primary)]">
                             <div class="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-3">
                                 <button id="genPassBtn"
                                     class="text-[10px] font-bold text-emerald-500 hover:text-emerald-400 transition-colors">GENERATE</button>
-                                <div class="w-px h-3 bg-slate-800"></div>
+                                <div class="w-px h-3 bg-[var(--border-card)]"></div>
                                 <button id="togglePass"
-                                    class="text-[10px] font-bold text-slate-500 hover:text-emerald-500 transition-colors">SHOW</button>
+                                    class="text-[var(--text-dim)] hover:text-emerald-400 transition-colors" title="Toggle Visibility"
+                                    aria-label="Toggle passphrase visibility">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5"><path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"/><circle cx="12" cy="12" r="3"/></svg>
+                                </button>
                             </div>
                         </div>
 
                         <!-- Strength Meter -->
-                        <div class="bg-slate-950/50 border border-slate-800/50 rounded-xl p-4 space-y-3">
+                        <div class="bg-[var(--bg-app)] border border-[var(--border-card)] rounded-xl p-4 space-y-3">
                             <div class="flex justify-between items-center mb-1">
-                                <span class="text-[10px] text-slate-500 font-bold uppercase">Strength Progress</span>
+                                <span class="text-[10px] text-[var(--text-dim)] font-bold uppercase">Strength Progress</span>
                                 <span id="strengthText" class="text-[10px] text-red-400 font-bold uppercase"></span>
                             </div>
-                            <div class="h-1.5 w-full bg-slate-800 rounded-full overflow-hidden">
+                            <div class="h-1.5 w-full bg-[var(--bg-card-alt)] rounded-full overflow-hidden">
                                 <div id="strengthBar" class="h-full w-0 bg-red-500 transition-all duration-500"></div>
                             </div>
                             <ul id="requirementList" class="grid grid-cols-2 gap-x-4 gap-y-2 pt-1">
                                 <li data-req="len"
-                                    class="flex items-center gap-2 text-[10px] text-slate-500 transition-colors">
-                                    <div class="w-1.5 h-1.5 rounded-full bg-slate-700"></div> 8+ Characters
+                                    class="flex items-center gap-2 text-[10px] text-[var(--text-dim)] transition-colors">
+                                    <div class="w-1.5 h-1.5 rounded-full bg-[var(--bg-card-alt)]"></div> 8+ Characters
                                 </li>
                                 <li data-req="upper"
-                                    class="flex items-center gap-2 text-[10px] text-slate-500 transition-colors">
-                                    <div class="w-1.5 h-1.5 rounded-full bg-slate-700"></div> 2+ Uppercase
+                                    class="flex items-center gap-2 text-[10px] text-[var(--text-dim)] transition-colors">
+                                    <div class="w-1.5 h-1.5 rounded-full bg-[var(--bg-card-alt)]"></div> 2+ Uppercase
                                 </li>
                                 <li data-req="lower"
-                                    class="flex items-center gap-2 text-[10px] text-slate-500 transition-colors">
-                                    <div class="w-1.5 h-1.5 rounded-full bg-slate-700"></div> Lowercase
+                                    class="flex items-center gap-2 text-[10px] text-[var(--text-dim)] transition-colors">
+                                    <div class="w-1.5 h-1.5 rounded-full bg-[var(--bg-card-alt)]"></div> Lowercase
                                 </li>
                                 <li data-req="symbol"
-                                    class="flex items-center gap-2 text-[10px] text-slate-500 transition-colors">
-                                    <div class="w-1.5 h-1.5 rounded-full bg-slate-700"></div> 2+ Symbols
+                                    class="flex items-center gap-2 text-[10px] text-[var(--text-dim)] transition-colors">
+                                    <div class="w-1.5 h-1.5 rounded-full bg-[var(--bg-card-alt)]"></div> 2+ Symbols
                                 </li>
                                 <li data-req="pattern"
-                                    class="flex items-center gap-2 text-[10px] text-slate-500 transition-colors">
-                                    <div class="w-1.5 h-1.5 rounded-full bg-slate-700"></div> Smart Numbers
+                                    class="flex items-center gap-2 text-[10px] text-[var(--text-dim)] transition-colors">
+                                    <div class="w-1.5 h-1.5 rounded-full bg-[var(--bg-card-alt)]"></div> Smart Numbers
                                 </li>
                             </ul>
                         </div>
@@ -132,14 +137,14 @@
                 </div>
 
                 <button id="generateBtn" disabled onclick="generateKeyPair()"
-                    class="w-full py-3 bg-slate-800 text-slate-500 font-bold rounded-xl active:scale-[0.98] transition-all cursor-not-allowed">
+                    class="w-full py-3 bg-[var(--bg-card-alt)] text-[var(--text-dim)] font-bold rounded-xl active:scale-[0.98] transition-all cursor-not-allowed">
                     INITIALIZING...
                 </button>
             </div>
 
             <!-- Result Section -->
             <div id="resultSection"
-                class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-2xl flex flex-col opacity-50 grayscale transition-all">
+                class="bg-[var(--bg-card)] border border-[var(--border-card)] rounded-3xl p-6 sm:p-8 shadow-2xl flex flex-col opacity-50 grayscale transition-all duration-500">
                 <div class="flex justify-between items-center mb-4">
                     <h2 class="text-sm font-semibold uppercase tracking-widest text-emerald-500">Generated Keys</h2>
                     <div id="statusBadge"
@@ -150,12 +155,12 @@
                 <div class="flex-grow space-y-4 overflow-hidden">
                     <div class="flex flex-col h-1/2 min-h-0">
                         <div class="flex justify-between items-end mb-1.5">
-                            <span class="text-[10px] text-slate-500 font-bold uppercase">Public Key (share this)</span>
+                            <span class="text-[10px] text-[var(--text-dim)] font-bold uppercase">Public Key (share this)</span>
                             <button onclick="copyKey('pub', event)"
                                 class="text-[10px] text-emerald-500 hover:underline">Copy</button>
                         </div>
                         <pre id="publicKeyArea"
-                            class="flex-grow bg-slate-950 border border-slate-800 rounded-lg p-3 text-[10px] mono text-slate-400 overflow-auto custom-scrollbar break-all whitespace-pre-wrap"></pre>
+                            class="flex-grow bg-[var(--bg-app)] border border-[var(--border-card)] rounded-lg p-3 text-[10px] mono text-[var(--text-secondary)] overflow-auto custom-scrollbar break-all whitespace-pre-wrap"></pre>
                     </div>
 
                     <div class="flex flex-col h-1/2 min-h-0">
@@ -166,7 +171,7 @@
                                 class="text-[10px] text-emerald-500 hover:underline">Copy</button>
                         </div>
                         <pre id="privateKeyArea"
-                            class="flex-grow bg-slate-950 border border-slate-800 rounded-lg p-3 text-[10px] mono text-slate-400 overflow-auto custom-scrollbar break-all whitespace-pre-wrap"></pre>
+                            class="flex-grow bg-[var(--bg-app)] border border-[var(--border-card)] rounded-lg p-3 text-[10px] mono text-[var(--text-secondary)] overflow-auto custom-scrollbar break-all whitespace-pre-wrap"></pre>
                     </div>
 
                     <!-- Package Info -->
@@ -174,7 +179,7 @@
                         class="hidden bg-emerald-500/5 border border-emerald-500/10 rounded-xl p-3 space-y-2">
                         <span class="text-[10px] text-emerald-500 font-bold uppercase block">Packaging Details</span>
                         <div class="flex justify-between items-center text-[10px]">
-                            <span class="text-slate-500 uppercase">ZIP Password (Used PGP Passphrase)</span>
+                            <span class="text-[var(--text-dim)] uppercase">ZIP Password (Used PGP Passphrase)</span>
                             <span id="displayPass" class="mono text-emerald-400 font-medium"></span>
                         </div>
                     </div>
@@ -186,22 +191,51 @@
                         DOWNLOAD AS .zip (Password: Your Passphrase)
                     </button>
                     <button onclick="location.reload()"
-                        class="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold rounded-lg transition-colors">
+                        class="px-4 py-2.5 bg-[var(--bg-card-alt)] hover:bg-[var(--border-card)] text-[var(--text-primary)] text-xs font-bold rounded-lg transition-colors border border-[var(--border-card)]">
                         RESET
                     </button>
                 </div>
             </div>
-
         </div>
+
+        <!-- Footer -->
+        <footer
+            class="mt-4 pb-2 text-center text-sm text-[var(--text-dim)] flex flex-col sm:flex-row justify-center items-center gap-4 border-t border-[var(--border-card)] pt-4">
+            <div class="flex items-center gap-4 flex-wrap justify-center">
+                <a href="https://github.com/vthiep2412/CryptoStudio" target="_blank" rel="noopener noreferrer"
+                    class="hover:text-emerald-400 transition-colors flex items-center gap-1.5">
+                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path fill-rule="evenodd"
+                            d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"
+                            clip-rule="evenodd"></path>
+                    </svg>
+                    vthiep2412/CryptoStudio
+                </a>
+                <span class="hidden sm:inline text-[var(--border-card)]">|</span>
+                <a href="https://www.apache.org/licenses/LICENSE-2.0" target="_blank" rel="noopener noreferrer"
+                    class="hover:text-emerald-400 transition-colors">
+                    Apache 2.0
+                </a>
+                <span class="hidden sm:inline text-[var(--border-card)]">|</span>
+                <button id="themeToggle" onclick="toggleTheme(event)"
+                    class="group w-10 h-10 flex items-center justify-center rounded-full bg-[var(--bg-card-alt)] border border-[var(--border-card)] hover:border-emerald-500 transition-all duration-300 shadow-lg"
+                    title="Toggle Theme" aria-label="Toggle dark/light mode">
+                    <svg id="sunIcon" class="hidden w-5 h-5 text-emerald-400" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
+                    <svg id="moonIcon" class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                    </svg>
+                </button>
+            </div>
+        </footer>
     </div>
 
     <!-- Processing Overlay -->
     <div id="overlay"
-        class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 hidden flex-col items-center justify-center space-y-4">
+        class="fixed inset-0 bg-[var(--bg-app)]/80 backdrop-blur-sm z-50 hidden flex-col items-center justify-center space-y-4">
         <div class="w-16 h-16 rounded-full border-4 border-emerald-500/20 border-t-emerald-500 animate-spin"></div>
         <div class="text-center">
-            <h3 class="text-lg font-bold text-white">Generating PGP Keys</h3>
-            <p id="overlaySubtext" class="text-slate-400 text-sm">This may take a minute for higher RSA bits...</p>
+            <h3 class="text-lg font-bold text-[var(--text-primary)]">Generating PGP Keys</h3>
+            <p id="overlaySubtext" class="text-[var(--text-secondary)] text-sm">This may take a minute for higher RSA bits...</p>
         </div>
     </div>
 
@@ -228,10 +262,27 @@
             packageInfo: document.getElementById('packageInfo')
         };
 
+        const icons = {
+            eye: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5"><path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"/><circle cx="12" cy="12" r="3"/></svg>`,
+            eyeOff: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5"><path d="m15 18-.722-3.25"/><path d="M2 8a10.645 10.645 0 0 0 20 0"/><path d="m20 15-1.726-2.05"/><path d="m4 15 1.726-2.05"/><path d="m9 18 .722-3.25"/></svg>`
+        };
+
         ui.togglePass.addEventListener('click', () => {
             const type = ui.passphrase.type === 'password' ? 'text' : 'password';
             ui.passphrase.type = type;
-            ui.togglePass.innerText = type === 'password' ? 'SHOW' : 'HIDE';
+            ui.togglePass.innerHTML = type === 'password' ? icons.eye : icons.eyeOff;
+            
+            // Update A11y
+            const label = document.querySelector('label[for="passphrase"]');
+            if (label) label.innerText = `PASSPHRASE (${type === 'password' ? 'HIDDEN' : 'VISIBLE'})`;
+            ui.togglePass.setAttribute('aria-pressed', type === 'text');
+            
+            // Add animation class
+            const svg = ui.togglePass.querySelector('svg');
+            if (svg) {
+                svg.classList.add('animate-icon');
+                setTimeout(() => svg.classList.remove('animate-icon'), 300);
+            }
         });
 
         function getSecureInt(max) {
@@ -280,21 +331,28 @@
 
             ui.passphrase.value = result;
             ui.passphrase.type = 'text';
-            ui.togglePass.innerText = 'HIDE';
-
-            // Force UI update
-            ui.passphrase.dispatchEvent(new Event('input'));
+            ui.togglePass.innerHTML = icons.eyeOff;
+            
+            // Add animation to the new icon
+            const svg = ui.togglePass.querySelector('svg');
+            if (svg) {
+                svg.classList.add('animate-icon');
+                setTimeout(() => svg.classList.remove('animate-icon'), 300);
+            }
+            
+            ui.strengthBar.style.width = '100%';
+          ui.passphrase.dispatchEvent(new Event('input'));
         });
 
         function setAlgo(type) {
             currentAlgo = type;
             document.querySelectorAll('.algo-btn').forEach(btn => {
                 btn.classList.remove('border-emerald-500/30', 'bg-emerald-500/10', 'text-emerald-400');
-                btn.classList.add('border-slate-800', 'bg-slate-950', 'text-slate-400');
+                btn.classList.add('border-[var(--border-card)]', 'bg-[var(--bg-app)]', 'text-[var(--text-dim)]');
             });
             const active = document.getElementById(`algo-${type}`);
             active.classList.add('border-emerald-500/30', 'bg-emerald-500/10', 'text-emerald-400');
-            active.classList.remove('border-slate-800', 'bg-slate-950', 'text-slate-400');
+            active.classList.remove('border-[var(--border-card)]', 'bg-[var(--bg-app)]', 'text-[var(--text-dim)]');
         }
 
         const inputs = {
@@ -307,10 +365,10 @@
             const isValid = EMAIL_REGEX.test(inputs.email.value);
             if (inputs.email.value && !isValid) {
                 inputs.email.classList.add('focus:ring-red-500', 'border-red-500/50');
-                inputs.email.classList.remove('focus:ring-emerald-500', 'border-slate-800');
+                inputs.email.classList.remove('focus:ring-emerald-500', 'border-[var(--border-card)]');
             } else {
                 inputs.email.classList.remove('focus:ring-red-500', 'border-red-500/50');
-                inputs.email.classList.add('focus:ring-emerald-500', 'border-slate-800');
+                inputs.email.classList.add('focus:ring-emerald-500', 'border-[var(--border-card)]');
             }
             updateGenerateState();
         });
@@ -320,11 +378,11 @@
 
             if (!val) {
                 ui.strengthBar.style.width = '0%';
-                ui.strengthBar.className = 'h-full bg-slate-800 transition-all duration-500';
+                ui.strengthBar.className = 'h-full bg-[var(--bg-card-alt)] transition-all duration-500';
                 ui.strengthText.innerText = '';
                 document.querySelectorAll('[data-req]').forEach(el => {
-                    el.classList.replace('text-emerald-400', 'text-slate-500');
-                    el.querySelector('div').classList.replace('bg-emerald-500', 'bg-slate-700');
+                    el.classList.replace('text-emerald-400', 'text-[var(--text-dim)]');
+                    el.querySelector('div').classList.replace('bg-emerald-500', 'bg-[var(--bg-card-alt)]');
                 });
                 isPassphraseValid = false;
                 updateGenerateState();
@@ -343,12 +401,12 @@
             for (const key in checks) {
                 const el = document.querySelector(`[data-req="${key}"]`);
                 if (checks[key]) {
-                    el.classList.replace('text-slate-500', 'text-emerald-400');
-                    el.querySelector('div').classList.replace('bg-slate-700', 'bg-emerald-500');
+                    el.classList.replace('text-[var(--text-dim)]', 'text-emerald-400');
+                    el.querySelector('div').classList.replace('bg-[var(--bg-card-alt)]', 'bg-emerald-500');
                     points++;
                 } else {
-                    el.classList.replace('text-emerald-400', 'text-slate-500');
-                    el.querySelector('div').classList.replace('bg-emerald-500', 'bg-slate-700');
+                    el.classList.replace('text-emerald-400', 'text-[var(--text-dim)]');
+                    el.querySelector('div').classList.replace('bg-emerald-500', 'bg-[var(--bg-card-alt)]');
                 }
             }
 
@@ -402,13 +460,13 @@
 
             if (isPassphraseValid && isNameValid && isEmailValid) {
                 ui.generateBtn.disabled = false;
-                ui.generateBtn.classList.replace('bg-slate-800', 'bg-emerald-600');
-                ui.generateBtn.classList.replace('text-slate-500', 'text-white');
+                ui.generateBtn.classList.replace('bg-[var(--bg-card-alt)]', 'bg-emerald-600');
+                ui.generateBtn.classList.replace('text-[var(--text-dim)]', 'text-white');
                 ui.generateBtn.classList.replace('cursor-not-allowed', 'cursor-pointer');
                 ui.generateBtn.classList.add('hover:bg-emerald-500', 'shadow-lg', 'shadow-emerald-900/20');
             } else {
                 ui.generateBtn.disabled = true;
-                ui.generateBtn.className = 'w-full py-3 bg-slate-800 text-slate-500 font-bold rounded-xl transition-all cursor-not-allowed';
+                ui.generateBtn.className = 'w-full py-3 bg-[var(--bg-card-alt)] text-[var(--text-dim)] font-bold rounded-xl transition-all cursor-not-allowed';
             }
         }
 
@@ -534,6 +592,79 @@
                 ui.downloadBtn.innerText = 'DOWNLOAD AS .ZIP';
             }
         }
+
+        // --- THEME ENGINE ---
+        function toggleTheme(event) {
+            const x = event.clientX;
+            const y = event.clientY;
+            const endRadius = Math.hypot(
+                Math.max(x, innerWidth - x),
+                Math.max(y, innerHeight - y)
+            );
+
+            const isTransition = !!document.startViewTransition;
+            
+            const performToggle = () => {
+                document.documentElement.classList.toggle('light');
+                const isLight = document.documentElement.classList.contains('light');
+                localStorage.setItem('theme', isLight ? 'light' : 'dark');
+                updateThemeIcons();
+                
+                // Update meta tag
+                const meta = document.querySelector('meta[name="color-scheme"]');
+                if (meta) meta.content = isLight ? 'light' : 'dark';
+            };
+
+            if (!isTransition) {
+                performToggle();
+                return;
+            }
+
+            const transition = document.startViewTransition(performToggle);
+
+            transition.ready.then(() => {
+                const clipPath = [
+                    `circle(0px at ${x}px ${y}px)`,
+                    `circle(${endRadius}px at ${x}px ${y}px)`,
+                ];
+                document.documentElement.animate(
+                    {
+                        clipPath: clipPath,
+                    },
+                    {
+                        duration: 700,
+                        easing: 'cubic-bezier(0.4, 0, 0.2, 1)',
+                        pseudoElement: '::view-transition-new(root)',
+                    }
+                );
+            }).catch(err => {
+                console.warn('View transition was skipped or failed:', err);
+            });
+        }
+
+        function updateThemeIcons() {
+            const isLight = document.documentElement.classList.contains('light');
+            document.getElementById('sunIcon').classList.toggle('hidden', !isLight);
+            document.getElementById('moonIcon').classList.toggle('hidden', isLight);
+        }
+
+        // Initialize theme from localStorage or system preference
+        const savedTheme = localStorage.getItem('theme');
+        const systemPrefersLight = window.matchMedia('(prefers-color-scheme: light)').matches;
+        const isLight = savedTheme === 'light' || (!savedTheme && systemPrefersLight);
+
+        if (isLight) {
+            document.documentElement.classList.add('light');
+            const meta = document.querySelector('meta[name="color-scheme"]');
+            if (meta) meta.content = 'light';
+        } else {
+            document.documentElement.classList.remove('light');
+            const meta = document.querySelector('meta[name="color-scheme"]');
+            if (meta) meta.content = 'dark';
+        }
+        
+        // Initialize icons
+        updateThemeIcons();
 
     </script>
 </body>
