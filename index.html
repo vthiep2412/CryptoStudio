@@ -751,40 +751,71 @@
         }
 
         // --- BACKGROUND WORKER (ZERO-LAG) ---
-        let cryptoWorker = null;
+        // We embed the worker logic to prevent 404s on GitHub Pages sub-paths
+        const workerCode = `
+            try {
+                importScripts('https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js');
+            } catch (e) {
+                self.postMessage({ error: 'Failed to load CryptoJS in worker: ' + e.message });
+            }
+
+            self.onmessage = function(e) {
+                if (typeof CryptoJS === 'undefined') {
+                    self.postMessage({ error: 'CryptoJS is not loaded in worker' });
+                    return;
+                }
+                const { password, saltHex, keySize, ivSize, iterations } = e.data;
+                try {
+                    const salt = CryptoJS.enc.Hex.parse(saltHex);
+                    const derived = CryptoJS.PBKDF2(password, salt, {
+                        keySize: (keySize + ivSize) / 4,
+                        iterations: iterations,
+                        hasher: CryptoJS.algo.SHA256
+                    });
+                    self.postMessage({ derivedHex: derived.toString(CryptoJS.enc.Hex) });
+                } catch (err) {
+                    self.postMessage({ error: 'PBKDF2 derivation failed: ' + err.message });
+                }
+            };
+        `;
+
+        const workerBlob = new Blob([workerCode], { type: 'application/javascript' });
+        const workerUrl = URL.createObjectURL(workerBlob);
 
         const pbkdf2Derive = (passphrase, salt, keySize, ivSize, iterations) => {
             return new Promise((resolve, reject) => {
-                if (cryptoWorker) cryptoWorker.terminate();
+                let localWorker;
                 try {
-                    cryptoWorker = new Worker('worker.js');
+                    localWorker = new Worker(workerUrl);
                 } catch (e) {
                     reject(new Error('Failed to instantiate worker: ' + e.message));
                     return;
                 }
 
                 const timeout = setTimeout(() => {
-                    cryptoWorker.terminate();
+                    localWorker.terminate();
                     reject(new Error('PBKDF2 derivation timed out'));
                 }, 30000); // 30s timeout for high iteration counts
 
-                cryptoWorker.onmessage = (e) => {
+                localWorker.onmessage = (e) => {
                     clearTimeout(timeout);
+                    localWorker.terminate();
                     if (e.data.error) {
-                        cryptoWorker.terminate();
                         reject(new Error(e.data.error));
                     } else {
                         resolve(CryptoJS.enc.Hex.parse(e.data.derivedHex));
                     }
                 };
 
-                cryptoWorker.onerror = (e) => {
+                localWorker.onerror = (e) => {
                     clearTimeout(timeout);
-                    cryptoWorker.terminate();
-                    reject(new Error('Worker error: ' + (e.message || 'Unknown error')));
+                    localWorker.terminate();
+                    // Provide better error context
+                    const msg = e.message || 'The worker encountered an unhandled error or failed to initialize.';
+                    reject(new Error('Worker runtime error: ' + msg));
                 };
 
-                cryptoWorker.postMessage({
+                localWorker.postMessage({
                     password: passphrase,
                     saltHex: salt.toString(CryptoJS.enc.Hex),
                     keySize,
