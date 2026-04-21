@@ -4,6 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="dark">
     <title>Crypto & Encoding Studio</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- TODO: Consider pinning versions and updating SRI hashes periodically -->
@@ -25,9 +26,9 @@
         <header class="mb-6 md:mb-8">
             <h1
                 class="text-2xl md:text-3xl font-bold bg-gradient-to-r from-emerald-400 to-cyan-500 bg-clip-text text-transparent">
-                Cipher & Encoding Studio
+                Crypto Studio
             </h1>
-            <p class="text-gray-400 mt-2 text-xs md:text-sm">Convert, Encode, and Encrypt strings locally in your
+            <p class="text-[var(--text-secondary)] mt-2 text-xs md:text-sm">Convert, Encode, and Encrypt strings locally in your
                 browser.</p>
         </header>
 
@@ -35,29 +36,21 @@
 
             <!-- Input & Controls Section -->
             <div
-                class="bg-gray-900 border border-gray-800 rounded-xl p-4 md:p-5 shadow-xl flex flex-col gap-4 md:gap-5 h-full">
+                class="bg-[var(--bg-card)] border border-[var(--border-card)] rounded-xl p-4 md:p-5 shadow-xl flex flex-col gap-4 md:gap-5 h-full">
 
                 <!-- Operation Type -->
-                <div class="relative flex p-1 bg-gray-800 rounded-lg w-full">
-                    <div id="pillBg"
-                        class="absolute top-1 bottom-1 left-1 w-[calc(33.333%-2.66px)] bg-emerald-600 rounded-md transition-transform duration-300 ease-in-out translate-x-0">
-                    </div>
-                    <button id="btnEncoding"
-                        class="relative flex-1 py-2 px-1 z-10 text-white font-medium transition-colors text-[10px] sm:text-xs md:text-sm"
-                        onclick="setCategory('encoding')">Encoding</button>
-                    <button id="btnEncryption"
-                        class="relative flex-1 py-2 px-1 z-10 text-gray-400 hover:text-white font-medium transition-colors text-[10px] sm:text-xs md:text-sm"
-                        onclick="setCategory('encryption')">Encryption</button>
-                    <button id="btnPGP" disabled
-                        class="relative flex-1 py-2 px-1 z-10 text-gray-600 font-medium transition-colors text-[10px] sm:text-xs md:text-sm cursor-not-allowed"
-                        onclick="setCategory('pgp')">Pretty Good Privacy</button>
+                <div class="pill-container pill-container-3 w-full">
+                    <div id="pillBg" class="pill-bg"></div>
+                    <button id="btnEncoding" class="pill-btn active" onclick="setCategory('encoding')">Encoding</button>
+                    <button id="btnEncryption" class="pill-btn" onclick="setCategory('encryption')">Encryption</button>
+                    <button id="btnPGP" class="pill-btn" onclick="setCategory('pgp')">PGP</button>
                 </div>
 
                 <!-- Action & Algorithm Select -->
                 <div id="controlsContainer" class="flex flex-col sm:flex-row gap-4">
                     <!-- Standard Action Area (Encoding/Encryption) -->
                     <div id="actionArea" class="flex-1 flex flex-col gap-2">
-                        <label class="text-xs text-gray-400 font-semibold uppercase tracking-wider">Action</label>
+                        <label class="text-xs text-[var(--text-secondary)] font-semibold uppercase tracking-wider">Action</label>
                         <div class="flex gap-4 items-center h-10 px-2">
                             <label class="flex items-center gap-2 cursor-pointer group">
                                 <input type="radio" name="action" value="process" checked class="sr-only peer">
@@ -65,7 +58,7 @@
                                     class="w-4 h-4 rounded-full border-2 border-gray-500 peer-checked:border-emerald-500 peer-checked:border-[5px] transition-all duration-200">
                                 </div>
                                 <span id="labelProcess"
-                                    class="text-sm text-gray-400 peer-checked:text-gray-200 transition-colors">Encode</span>
+                                    class="text-sm text-[var(--text-secondary)] peer-checked:text-[var(--text-primary)] transition-colors">Encode</span>
                             </label>
                             <label class="flex items-center gap-2 cursor-pointer group">
                                 <input type="radio" name="action" value="reverse" class="sr-only peer">
@@ -73,37 +66,26 @@
                                     class="w-4 h-4 rounded-full border-2 border-gray-500 peer-checked:border-emerald-500 peer-checked:border-[5px] transition-all duration-200">
                                 </div>
                                 <span id="labelReverse"
-                                    class="text-sm text-gray-400 peer-checked:text-gray-200 transition-colors">Decode</span>
+                                    class="text-sm text-[var(--text-secondary)] peer-checked:text-[var(--text-primary)] transition-colors">Decode</span>
                             </label>
                         </div>
                     </div>
 
-                    <!-- PGP Action Area (Jumping Pill) -->
                     <div id="pgpActionArea" class="hidden flex-1 flex flex-col gap-2">
-                        <label class="text-xs text-gray-400 font-semibold uppercase tracking-wider">Action</label>
-                        <div class="relative flex p-1 bg-gray-800 rounded-lg w-full">
-                            <div id="pgpPillBg"
-                                class="absolute top-1 bottom-1 left-1 w-[calc(25%-2px)] bg-emerald-600 rounded-md transition-transform duration-300 ease-in-out translate-x-0">
-                            </div>
-                            <button
-                                class="pgp-switch-btn relative flex-1 py-2 z-10 text-white font-bold transition-colors text-xs uppercase tracking-wider"
-                                onclick="setPgpAction('pgp-encrypt', 0)">Encrypt</button>
-                            <button
-                                class="pgp-switch-btn relative flex-1 py-2 z-10 text-gray-400 hover:text-white font-bold transition-colors text-xs uppercase tracking-wider"
-                                onclick="setPgpAction('pgp-decrypt', 1)">Decrypt</button>
-                            <button
-                                class="pgp-switch-btn relative flex-1 py-2 z-10 text-gray-400 hover:text-white font-bold transition-colors text-xs uppercase tracking-wider"
-                                onclick="setPgpAction('pgp-sign', 2)">Sign</button>
-                            <button
-                                class="pgp-switch-btn relative flex-1 py-2 z-10 text-gray-400 hover:text-white font-bold transition-colors text-xs uppercase tracking-wider"
-                                onclick="setPgpAction('pgp-verify', 3)">Verify</button>
+                        <label class="text-xs text-[var(--text-secondary)] font-semibold uppercase tracking-wider">Action</label>
+                        <div class="pill-container pill-container-4 w-full">
+                            <div id="pgpPillBg" class="pill-bg"></div>
+                            <button class="pgp-switch-btn pill-btn active" onclick="setPgpAction('pgp-encrypt', 0)">Encrypt</button>
+                            <button class="pgp-switch-btn pill-btn" onclick="setPgpAction('pgp-decrypt', 1)">Decrypt</button>
+                            <button class="pgp-switch-btn pill-btn" onclick="setPgpAction('pgp-sign', 2)">Sign</button>
+                            <button class="pgp-switch-btn pill-btn" onclick="setPgpAction('pgp-verify', 3)">Verify</button>
                         </div>
                     </div>
                     <div id="algoSelectContainer" class="flex-1 flex flex-col gap-2">
                         <label for="algorithmSelect"
-                            class="text-xs text-gray-400 font-semibold uppercase tracking-wider">Algorithm</label>
+                            class="text-xs text-[var(--text-secondary)] font-semibold uppercase tracking-wider">Algorithm</label>
                         <select id="algorithmSelect"
-                            class="bg-gray-800 border border-gray-700 text-gray-200 text-sm rounded-lg focus:ring-emerald-500 focus:border-emerald-500 block w-full p-2.5 outline-none transition-colors">
+                            class="bg-[var(--bg-card-alt)] border border-[var(--border-card)] text-[var(--text-primary)] text-sm rounded-lg focus:ring-emerald-500 focus:border-emerald-500 block w-full p-2.5 outline-none transition-colors">
                             <!-- Populated by JS -->
                         </select>
                     </div>
@@ -113,7 +95,7 @@
                 <div id="keyContainer" class="hidden flex-col gap-2">
                     <div class="flex justify-between items-center">
                         <label for="cryptoKey"
-                            class="text-xs text-gray-400 font-semibold uppercase tracking-wider">Secret Key / PGP
+                            class="text-xs text-[var(--text-secondary)] font-semibold uppercase tracking-wider">Secret Key / PGP
                             Key</label>
                         <a id="genKeyLink" href="pgp-gen.html"
                             class="hidden text-xs text-emerald-400 hover:text-emerald-300 font-bold bg-emerald-400/10 px-4 py-2 rounded-lg border border-emerald-500/30 transition-all uppercase tracking-wider hover:bg-emerald-400/20">
@@ -121,11 +103,11 @@
                         </a>
                     </div>
                     <textarea id="cryptoKey" placeholder="Enter your secret key or PGP armored key..."
-                        class="bg-gray-800 border border-gray-700 text-gray-200 text-sm rounded-lg focus:ring-emerald-500 focus:border-emerald-500 block w-full p-2.5 min-h-[80px] outline-none transition-colors custom-scrollbar resize-none"></textarea>
+                        class="bg-[var(--bg-card-alt)] border border-[var(--border-card)] text-[var(--text-primary)] text-sm rounded-lg focus:ring-emerald-500 focus:border-emerald-500 block w-full p-2.5 min-h-[80px] outline-none transition-colors custom-scrollbar resize-none"></textarea>
 
                     <!-- Enhance Protection Controls -->
                     <div id="protectionControls"
-                        class="hidden mt-1 p-4 bg-gray-900/40 border border-gray-800/60 rounded-xl flex-col gap-3 transition-all">
+                        class="hidden mt-1 p-4 bg-[var(--bg-app)]/40 border border-[var(--border-card)] rounded-xl flex-col gap-3 transition-all">
                         <div class="flex justify-between items-center">
                             <label class="flex items-center gap-3 cursor-pointer group">
                                 <div class="relative">
@@ -136,14 +118,14 @@
                                     </div>
                                 </div>
                                 <span
-                                    class="text-xs text-gray-400 font-bold uppercase tracking-wider group-hover:text-emerald-400 transition-colors shrink-0">Enhance
+                                    class="text-xs text-[var(--text-secondary)] font-bold uppercase tracking-wider group-hover:text-emerald-400 transition-colors shrink-0">Enhance
                                     Protection</span>
                                 <div class="relative group/tooltip inline-block">
                                     <div
                                         class="w-3.5 h-3.5 flex items-center justify-center rounded-full border border-gray-600 text-[10px] text-gray-500 group-hover/tooltip:border-emerald-500 group-hover/tooltip:text-emerald-500 cursor-help transition-all font-black">
                                         ?</div>
                                     <div
-                                        class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover/tooltip:block w-64 p-3 bg-gray-900 border border-gray-800 rounded-lg shadow-2xl z-50 pointer-events-none">
+                                        class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover/tooltip:block w-64 p-3 bg-[var(--bg-card)] border border-[var(--border-card)] rounded-lg shadow-2xl z-50 pointer-events-none">
                                         <p class="text-[10px] text-gray-300 leading-relaxed font-medium">
                                             <span class="text-emerald-400 font-bold block mb-1">Vault Mode Key
                                                 Hardening</span>
@@ -152,11 +134,11 @@
                                             iterations is required for decryption on other platforms.
                                             <br>
                                             <span
-                                                class="text-emerald-400 border-t border-gray-800 font-bold block mt-1">Iteration
+                                                class="text-emerald-400 border-t border-[var(--border-card)] font-bold block mt-1">Iteration
                                                 over
                                                 levels:</span>
                                             <span
-                                                class="block pt-2 text-[11px] text-gray-400 font-mono tracking-tight text-center">
+                                                class="block pt-2 text-[11px] text-[var(--text-secondary)] font-mono tracking-tight text-center">
                                                 L1: 1 | L2: 10 | L3: 100 | L4: 1,000<br>
                                                 L5: 10,000 | L6: 100k | L7: 1M
                                             </span>
@@ -169,21 +151,21 @@
                             </label>
                             <div id="levelDisplay" class="hidden items-center gap-3">
                                 <button onclick="adjustLevel(-1)"
-                                    class="w-7 h-7 flex items-center justify-center bg-gray-800 border border-gray-700 rounded-md text-emerald-400 hover:bg-gray-700 transition-colors font-bold">-</button>
+                                    class="w-7 h-7 flex items-center justify-center bg-[var(--bg-card-alt)] border border-[var(--border-card)] rounded-md text-emerald-400 hover:bg-gray-700 transition-colors font-bold">-</button>
                                 <span id="securityLevelDisplay"
                                     class="w-8 text-emerald-400 text-center text-sm font-black tabular-nums">5</span>
                                 <button onclick="adjustLevel(1)"
-                                    class="w-7 h-7 flex items-center justify-center bg-gray-800 border border-gray-700 rounded-md text-emerald-400 hover:bg-gray-700 transition-colors font-bold">+</button>
+                                    class="w-7 h-7 flex items-center justify-center bg-[var(--bg-card-alt)] border border-[var(--border-card)] rounded-md text-emerald-400 hover:bg-gray-700 transition-colors font-bold">+</button>
                             </div>
                         </div>
 
                         <div id="levelSliderContainer" class="hidden flex-col gap-2">
                             <input type="range" id="securitySlider" min="1" max="7" value="5" step="1"
-                                class="w-full h-1.5 bg-gray-800 rounded-lg appearance-none cursor-pointer accent-emerald-500 overflow-hidden"
+                                class="w-full h-1.5 bg-[var(--bg-card-alt)] rounded-lg appearance-none cursor-pointer accent-emerald-500 overflow-hidden"
                                 oninput="syncLevel(this.value)">
                             <div class="flex justify-between px-1">
-                                <span class="text-[9px] text-gray-600 font-bold">MIN</span>
-                                <span class="text-[9px] text-gray-600 font-bold">VAULT</span>
+                                <span class="text-[9px] text-[var(--text-dim)] font-bold">MIN</span>
+                                <span class="text-[9px] text-[var(--text-dim)] font-bold">VAULT</span>
                             </div>
                             <div id="levelSpecs"
                                 class="text-xs text-slate-500 font-mono italic leading-tight border-l-2 border-emerald-500/20 pl-3 mt-1">
@@ -196,35 +178,37 @@
 
                 <!-- PGP Passphrase (PGP Specific) -->
                 <div id="pgpPassContainer" class="hidden flex-col gap-2">
-                    <div class="flex justify-between items-center">
-                        <label for="pgpPassphrase"
-                            class="text-xs text-slate-500 font-semibold uppercase tracking-wider">PGP Passphrase</label>
-                        <button onclick="togglePgpPass()"
-                            class="text-[10px] text-emerald-500 hover:text-emerald-400 font-bold uppercase tracking-wider transition-colors">Show/Hide</button>
+                    <label for="pgpPassphrase"
+                        class="text-xs text-slate-500 font-semibold uppercase tracking-wider">PGP Passphrase</label>
+                    <div class="relative">
+                        <input type="password" id="pgpPassphrase" placeholder="Enter passphrase for private key..."
+                            class="bg-[var(--bg-card-alt)] border border-[var(--border-card)] text-[var(--text-primary)] text-sm rounded-lg focus:ring-emerald-500 focus:border-emerald-500 block w-full p-2.5 pr-12 outline-none transition-colors">
+                        <button id="pgpPassToggle" onclick="togglePgpPass()"
+                            class="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-dim)] hover:text-emerald-400 transition-colors" title="Toggle Visibility">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5"><path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"/><circle cx="12" cy="12" r="3"/></svg>
+                        </button>
                     </div>
-                    <input type="password" id="pgpPassphrase" placeholder="Enter passphrase for private key..."
-                        class="bg-gray-800 border border-gray-700 text-gray-200 text-sm rounded-lg focus:ring-emerald-500 focus:border-emerald-500 block w-full p-2.5 outline-none transition-colors">
                 </div>
 
                 <!-- Input Text -->
                 <div class="flex flex-col gap-2 flex-grow">
                     <div class="flex justify-between items-end">
                         <label for="inputText"
-                            class="text-xs text-gray-400 font-semibold uppercase tracking-wider">Input Text</label>
+                            class="text-xs text-[var(--text-secondary)] font-semibold uppercase tracking-wider">Input Text</label>
                         <button onclick="clearInput()"
-                            class="text-xs text-gray-500 hover:text-gray-300 transition-colors">Clear</button>
+                            class="text-xs text-[var(--text-dim)] hover:text-[var(--text-primary)] transition-colors">Clear</button>
                     </div>
                     <textarea id="inputText" placeholder="Type or paste your text here..."
-                        class="bg-gray-800 custom-scrollbar border border-gray-700 text-gray-200 text-sm rounded-lg focus:ring-emerald-500 focus:border-emerald-500 block w-full p-3 min-h-[150px] flex-grow outline-none resize-none transition-colors"></textarea>
+                        class="bg-[var(--bg-card-alt)] custom-scrollbar border border-[var(--border-card)] text-[var(--text-primary)] text-sm rounded-lg focus:ring-emerald-500 focus:border-emerald-500 block w-full p-3 min-h-[150px] flex-grow outline-none resize-none transition-colors"></textarea>
                 </div>
             </div>
 
             <!-- Output Section -->
-            <div class="bg-gray-900 border border-gray-800 rounded-xl p-4 md:p-5 shadow-xl flex flex-col gap-2 h-full">
+            <div class="bg-[var(--bg-card)] border border-[var(--border-card)] rounded-xl p-4 md:p-5 shadow-xl flex flex-col gap-2 h-full">
                 <div class="flex justify-between items-end mb-1 md:mb-3">
-                    <label class="text-xs text-gray-400 font-semibold uppercase tracking-wider">Output Result</label>
+                    <label class="text-xs text-[var(--text-secondary)] font-semibold uppercase tracking-wider">Output Result</label>
                     <button onclick="copyOutput()"
-                        class="flex items-center gap-1.5 text-xs bg-gray-800 hover:bg-gray-700 text-gray-300 py-1.5 px-3 rounded-md border border-gray-700 transition-colors">
+                        class="flex items-center gap-1.5 text-xs bg-[var(--bg-card-alt)] hover:bg-gray-700 text-[var(--text-secondary)] py-1.5 px-3 rounded-md border border-[var(--border-card)] transition-colors">
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"
                             xmlns="http://www.w3.org/2000/svg">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -236,7 +220,7 @@
                 </div>
 
                 <div id="outputArea"
-                    class="bg-gray-950 border border-gray-800 rounded-lg p-4 flex-grow min-h-[150px] md:min-h-[300px] overflow-auto custom-scrollbar font-mono text-sm text-gray-300 break-all whitespace-pre-wrap">
+                    class="bg-[var(--bg-app)] border border-[var(--border-card)] rounded-lg p-4 flex-grow min-h-[150px] md:min-h-[300px] overflow-auto custom-scrollbar font-mono text-sm text-[var(--text-secondary)] break-all whitespace-pre-wrap">
                 </div>
 
                 <!-- Recovery Area (Dynamic buttons) -->
@@ -249,7 +233,7 @@
                 </div>
 
                 <!-- Live Status Indicator -->
-                <div class="mt-4 flex justify-between items-center border-t border-gray-800/60 pt-4">
+                <div class="mt-4 flex justify-between items-center border-t border-[var(--border-card)] pt-4">
                     <span class="text-xs text-slate-500 uppercase font-bold tracking-widest">Engine Status</span>
                     <div id="statusText" class="text-xs text-slate-500 uppercase font-black tracking-widest">Idle</div>
                 </div>
@@ -259,21 +243,32 @@
 
         <!-- Footer -->
         <footer
-            class="mt-12 pb-4 text-center text-sm text-gray-500 flex flex-col sm:flex-row justify-center items-center gap-4 border-t border-gray-800 pt-6">
-            <a href="https://github.com/vthiep2412/CryptoStudio" target="_blank" rel="noopener noreferrer"
-                class="hover:text-emerald-400 transition-colors flex items-center gap-1.5">
-                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                    <path fill-rule="evenodd"
-                        d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"
-                        clip-rule="evenodd"></path>
-                </svg>
-                vthiep2412/CryptoStudio
-            </a>
-            <span class="hidden sm:inline text-gray-700">|</span>
-            <a href="https://www.apache.org/licenses/LICENSE-2.0" target="_blank" rel="noopener noreferrer"
-                class="hover:text-emerald-400 transition-colors">
-                Apache 2.0 License
-            </a>
+            class="mt-12 pb-4 text-center text-sm text-[var(--text-dim)] flex flex-col sm:flex-row justify-center items-center gap-4 border-t border-[var(--border-card)] pt-6">
+            <div class="flex items-center gap-4 flex-wrap justify-center">
+                <a href="https://github.com/vthiep2412/CryptoStudio" target="_blank" rel="noopener noreferrer"
+                    class="hover:text-emerald-400 transition-colors flex items-center gap-1.5">
+                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path fill-rule="evenodd"
+                            d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"
+                            clip-rule="evenodd"></path>
+                    </svg>
+                    vthiep2412/CryptoStudio
+                </a>
+                <span class="hidden sm:inline text-gray-700">|</span>
+                <a href="https://www.apache.org/licenses/LICENSE-2.0" target="_blank" rel="noopener noreferrer"
+                    class="hover:text-emerald-400 transition-colors">
+                    Apache 2.0
+                </a>
+                <span class="hidden sm:inline text-gray-700">|</span>
+                <button id="themeToggle" onclick="toggleTheme(event)"
+                    class="group w-10 h-10 flex items-center justify-center rounded-full bg-[var(--bg-card-alt)] border border-[var(--border-card)] hover:border-emerald-500 transition-all duration-300 shadow-lg"
+                    title="Toggle Theme">
+                    <svg id="sunIcon" class="hidden w-5 h-5 text-emerald-400" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
+                    <svg id="moonIcon" class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                    </svg>
+                </button>
+            </div>
         </footer>
 
     </div>
@@ -436,38 +431,41 @@
             }
         }
 
-        function setCategory(category) {
-            currentCategory = category;
-            const pillBg = document.getElementById('pillBg');
+        function setCategory(cat) {
+            currentCategory = cat;
+            const pill = document.getElementById('pillBg');
 
-            // UI tab updates
-            const btns = [btnEncoding, btnEncryption, btnPGP];
-            btns.forEach(b => b.classList.replace('text-white', 'text-gray-400'));
+            // Update active states
+            [btnEncoding, btnEncryption, btnPGP].forEach(b => b.classList.remove('active'));
 
-            if (category === 'encoding') {
-                pillBg.style.transform = 'translateX(0)';
-                btnEncoding.classList.replace('text-gray-400', 'text-white');
+            if (cat === 'encoding') {
+                pill.style.setProperty('--pill-translate', '0%');
+                btnEncoding.classList.add('active');
                 labelProcess.textContent = "Encode";
                 labelReverse.textContent = "Decode";
                 keyContainer.classList.add('hidden');
                 genKeyLink.classList.add('hidden');
                 algoSelectContainer.classList.remove('hidden');
-            } else if (category === 'encryption') {
-                pillBg.style.transform = 'translateX(100%)';
-                btnEncryption.classList.replace('text-gray-400', 'text-white');
+                actionArea.classList.remove('hidden');
+                pgpActionArea.classList.add('hidden');
+            } else if (cat === 'encryption') {
+                pill.style.setProperty('--pill-translate', '100%');
+                btnEncryption.classList.add('active');
                 labelProcess.textContent = "Encrypt";
                 labelReverse.textContent = "Decrypt";
                 keyContainer.classList.remove('hidden');
                 keyContainer.classList.add('flex');
                 genKeyLink.classList.add('hidden');
                 algoSelectContainer.classList.remove('hidden');
+                actionArea.classList.remove('hidden');
+                pgpActionArea.classList.add('hidden');
             } else {
-                pillBg.style.transform = 'translateX(200%)';
-                btnPGP.classList.replace('text-gray-400', 'text-white');
+                pill.style.setProperty('--pill-translate', '200%');
+                btnPGP.classList.add('active');
                 keyContainer.classList.remove('hidden');
                 keyContainer.classList.add('flex');
                 genKeyLink.classList.remove('hidden');
-                algoSelectContainer.classList.add('hidden'); // Dropdown hidden for PGP
+                algoSelectContainer.classList.add('hidden');
                 actionArea.classList.add('hidden');
                 pgpActionArea.classList.remove('hidden');
                 pgpActionArea.classList.add('flex');
@@ -476,15 +474,20 @@
             updatePGPFields();
             populateSelect();
             executeTransformation();
+            
+            // Re-initialize custom dropdowns if they exist
+            if (window.initializeCustomDropdowns) initializeCustomDropdowns();
         }
 
         function setPgpAction(algo, idx) {
             currentPgpAlgo = algo;
-            pgpPillBg.style.transform = `translateX(${idx * 100}%)`;
-
+            const pill = document.getElementById('pgpPillBg');
             const btns = document.querySelectorAll('.pgp-switch-btn');
-            btns.forEach(b => b.classList.replace('text-white', 'text-gray-400'));
-            btns[idx].classList.replace('text-gray-400', 'text-white');
+
+            pill.style.setProperty('--pill-translate', `${idx * 100}%`);
+
+            btns.forEach(b => b.classList.remove('active'));
+            btns[idx].classList.add('active');
 
             updatePGPFields();
             executeTransformation();
@@ -498,7 +501,11 @@
                 pgpActionArea.classList.add('flex');
                 if (protection) protection.classList.add('hidden');
 
-                // Toggle Passphrase field
+                // Key container and Gen button always visible in PGP
+                keyContainer.classList.remove('hidden');
+                keyContainer.classList.add('flex');
+                genKeyLink.classList.remove('hidden');
+
                 if (algo === 'pgp-decrypt' || algo === 'pgp-sign') {
                     pgpPassContainer.classList.remove('hidden');
                     pgpPassContainer.classList.add('flex');
@@ -519,7 +526,6 @@
                 cryptoKey.placeholder = "Enter your secret key or password...";
                 actionArea.classList.remove('hidden');
 
-                // Show protection controls for symmetric encryption algorithms
                 if (protection) {
                     if (currentCategory === 'encryption' && algorithmSelect.value !== 'xor') {
                         protection.classList.remove('hidden');
@@ -778,16 +784,27 @@
                 }
             };
         `;
-
-        const workerBlob = new Blob([workerCode], { type: 'application/javascript' });
-        const workerUrl = URL.createObjectURL(workerBlob);
-
+ 
+        let activeWorker = null;
+ 
         const pbkdf2Derive = (passphrase, salt, keySize, ivSize, iterations) => {
             return new Promise((resolve, reject) => {
+                const workerBlob = new Blob([workerCode], { type: 'application/javascript' });
+                const workerUrl = URL.createObjectURL(workerBlob);
+
+                // Terminate any existing worker to prevent concurrent CPU-heavy tasks
+                if (activeWorker) {
+                    activeWorker.terminate();
+                    activeWorker = null;
+                }
+
                 let localWorker;
                 try {
                     localWorker = new Worker(workerUrl);
+                    activeWorker = localWorker;
+                    URL.revokeObjectURL(workerUrl);
                 } catch (e) {
+                    URL.revokeObjectURL(workerUrl);
                     reject(new Error('Failed to instantiate worker: ' + e.message));
                     return;
                 }
@@ -800,6 +817,7 @@
                 localWorker.onmessage = (e) => {
                     clearTimeout(timeout);
                     localWorker.terminate();
+                    if (activeWorker === localWorker) activeWorker = null;
                     if (e.data.error) {
                         reject(new Error(e.data.error));
                     } else {
@@ -810,8 +828,28 @@
                 localWorker.onerror = (e) => {
                     clearTimeout(timeout);
                     localWorker.terminate();
-                    // Provide better error context
-                    const msg = e.message || 'The worker encountered an unhandled error or failed to initialize.';
+                    if (activeWorker === localWorker) activeWorker = null;
+                    // Build a detailed diagnostic message including location when available
+                    const parts = [];
+                    if (e && e.message) {
+                        parts.push(e.message);
+                    } else {
+                        parts.push('The worker encountered an unhandled error or failed to initialize.');
+                    }
+                    const locationParts = [];
+                    if (e && e.filename) {
+                        locationParts.push(e.filename);
+                    }
+                    if (e && typeof e.lineno === 'number') {
+                        locationParts.push('line ' + e.lineno);
+                    }
+                    if (e && typeof e.colno === 'number') {
+                        locationParts.push('col ' + e.colno);
+                    }
+                    if (locationParts.length) {
+                        parts.push('(' + locationParts.join(': ') + ')');
+                    }
+                    const msg = parts.join(' ');
                     reject(new Error('Worker runtime error: ' + msg));
                 };
 
@@ -1198,11 +1236,185 @@
         }
 
         function togglePgpPass() {
-            pgpPassphraseInput.type = pgpPassphraseInput.type === 'password' ? 'text' : 'password';
+            const btn = document.getElementById('pgpPassToggle');
+            const type = pgpPassphraseInput.type === 'password' ? 'text' : 'password';
+            pgpPassphraseInput.type = type;
+            
+            const eye = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5"><path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"/><circle cx="12" cy="12" r="3"/></svg>`;
+            const eyeOff = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5"><path d="m15 18-.722-3.25"/><path d="M2 8a10.645 10.645 0 0 0 20 0"/><path d="m20 15-1.726-2.05"/><path d="m4 15 1.726-2.05"/><path d="m9 18 .722-3.25"/></svg>`;
+            
+            btn.innerHTML = type === 'password' ? eye : eyeOff;
+            
+            // Add animation class
+            const svg = btn.querySelector('svg');
+            if (svg) {
+                svg.classList.add('animate-icon');
+                setTimeout(() => svg.classList.remove('animate-icon'), 300);
+            }
         }
+
+        // --- THEME ENGINE ---
+        function toggleTheme(event) {
+            const x = event.clientX;
+            const y = event.clientY;
+            const endRadius = Math.hypot(
+                Math.max(x, innerWidth - x),
+                Math.max(y, innerHeight - y)
+            );
+
+            if (!document.startViewTransition) {
+                document.documentElement.classList.toggle('light');
+                updateThemeIcons();
+                return;
+            }
+
+            const transition = document.startViewTransition(() => {
+                document.documentElement.classList.toggle('light');
+                updateThemeIcons();
+            });
+
+            transition.ready.then(() => {
+                const clipPath = [
+                    `circle(0px at ${x}px ${y}px)`,
+                    `circle(${endRadius}px at ${x}px ${y}px)`,
+                ];
+                document.documentElement.animate(
+                    {
+                        clipPath: clipPath,
+                    },
+                    {
+                        duration: 700,
+                        easing: 'cubic-bezier(0.4, 0, 0.2, 1)',
+                        pseudoElement: '::view-transition-new(root)',
+                    }
+                );
+            }).catch(err => {
+                console.warn('View transition was skipped or failed:', err);
+            });
+        }
+
+        function updateThemeIcons() {
+            const isLight = document.documentElement.classList.contains('light');
+            document.getElementById('sunIcon').classList.toggle('hidden', !isLight);
+            document.getElementById('moonIcon').classList.toggle('hidden', isLight);
+        }
+
+        // Redundant functions removed for consolidation.
+
+        // --- CUSTOM DROPDOWN ENGINE ---
+        function createRipple(e, parent) {
+            const rect = parent.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            const size = Math.max(rect.width, rect.height) * 2;
+            
+            const dim = document.createElement('div');
+            dim.className = 'spread-ripple ripple-dim animate-ripple';
+            dim.style.width = dim.style.height = `${size}px`;
+            dim.style.left = `${x - size/2}px`;
+            dim.style.top = `${y - size/2}px`;
+            parent.appendChild(dim);
+            
+            setTimeout(() => {
+                const clear = document.createElement('div');
+                clear.className = 'spread-ripple ripple-clear animate-ripple';
+                clear.style.width = clear.style.height = `${size}px`;
+                clear.style.left = `${x - size/2}px`;
+                clear.style.top = `${y - size/2}px`;
+                parent.appendChild(clear);
+                
+                setTimeout(() => {
+                    dim.remove();
+                    clear.remove();
+                }, 1000);
+            }, 100);
+        }
+
+        function initializeCustomDropdowns() {
+            const selects = document.querySelectorAll('select:not(.custom-init)');
+            selects.forEach(select => {
+                const container = document.createElement('div');
+                container.className = 'dropdown-container';
+                
+                const trigger = document.createElement('div');
+                trigger.className = 'dropdown-trigger';
+                trigger.tabIndex = 0;
+                
+                const label = document.createElement('span');
+                label.innerText = select.options[select.selectedIndex]?.text || 'Select...';
+                
+                const arrow = document.createElement('div');
+                arrow.className = 'dropdown-arrow';
+                arrow.innerHTML = `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M19 9l-7 7-7-7" /></svg>`;
+                
+                trigger.appendChild(label);
+                trigger.appendChild(arrow);
+                
+                const optionsList = document.createElement('div');
+                optionsList.className = 'dropdown-options custom-scrollbar';
+                
+                const syncOptions = () => {
+                    optionsList.innerHTML = '';
+                    Array.from(select.options).forEach((opt, idx) => {
+                        const optionEl = document.createElement('div');
+                        optionEl.className = 'dropdown-option' + (idx === select.selectedIndex ? ' selected' : '');
+                        optionEl.innerText = opt.text;
+                        optionEl.onclick = (e) => {
+                            e.stopPropagation();
+                            select.selectedIndex = idx;
+                            select.dispatchEvent(new Event('change'));
+                            label.innerText = opt.text;
+                            toggleDropdown(false);
+                        };
+                        optionsList.appendChild(optionEl);
+                    });
+                };
+
+                const toggleDropdown = (show) => {
+                    if (show) {
+                        syncOptions();
+                        trigger.classList.add('open');
+                        optionsList.classList.add('show');
+                    } else {
+                        trigger.classList.remove('open');
+                        optionsList.classList.remove('show');
+                    }
+                };
+
+                trigger.onclick = (e) => {
+                    const isOpen = optionsList.classList.contains('show');
+                    document.querySelectorAll('.dropdown-options').forEach(el => el.classList.remove('show'));
+                    document.querySelectorAll('.dropdown-trigger').forEach(el => el.classList.remove('open'));
+                    toggleDropdown(!isOpen);
+                    createRipple(e, trigger);
+                };
+
+                // Observer to re-sync if original select options change (e.g. algorithm changes)
+                if (select._observer) select._observer.disconnect();
+                const observer = new MutationObserver(() => {
+                    label.innerText = select.options[select.selectedIndex]?.text || 'Select...';
+                });
+                observer.observe(select, { childList: true, attributes: true });
+                select._observer = observer;
+
+                container.appendChild(trigger);
+                container.appendChild(optionsList);
+                select.parentNode.insertBefore(container, select);
+                select.classList.add('hidden', 'custom-init');
+            });
+        }
+
+        // Close on outside click
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.dropdown-container')) {
+                document.querySelectorAll('.dropdown-options').forEach(el => el.classList.remove('show'));
+                document.querySelectorAll('.dropdown-trigger').forEach(el => el.classList.remove('open'));
+            }
+        });
 
         // Boot
         init();
+        initializeCustomDropdowns();
 
     </script>
 </body>
