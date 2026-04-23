@@ -185,7 +185,7 @@
                             class="bg-[var(--bg-card-alt)] border border-[var(--border-card)] text-[var(--text-primary)] text-sm rounded-lg focus:ring-emerald-500 focus:border-emerald-500 block w-full p-2.5 pr-12 outline-none transition-colors">
                         <button id="pgpPassToggle" onclick="togglePgpPass()"
                             class="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-dim)] hover:text-emerald-400 transition-colors" title="Toggle Visibility"
-                            aria-label="Toggle passphrase visibility">
+                            aria-label="Toggle passphrase visibility" aria-pressed="false">
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5"><path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"/><circle cx="12" cy="12" r="3"/></svg>
                         </button>
                     </div>
@@ -418,7 +418,10 @@
         function init() {
             populateSelect();
             addEventListeners();
-            setCategory('encoding');
+            
+            // Restore category from localStorage if it exists, otherwise default to encoding
+            const savedCat = localStorage.getItem('activeCategory') || 'encoding';
+            setCategory(savedCat, false);
 
             window.addEventListener('openpgp-ready', () => {
                 btnPGP.disabled = false;
@@ -1461,14 +1464,19 @@
         
         init();
         
-        // Restore tab states
-        const savedCat = localStorage.getItem('activeCategory');
-        if (savedCat) setCategory(savedCat, false);
-        
+        // Restore PGP state with defensive validation
         const savedPgpAlgo = localStorage.getItem('activePgpAlgo');
         const savedPgpIdx = localStorage.getItem('activePgpIdx');
         if (savedPgpAlgo && savedPgpIdx !== null) {
-            setPgpAction(savedPgpAlgo, parseInt(savedPgpIdx), false);
+            const idx = parseInt(savedPgpIdx, 10);
+            // Validate that the index is a finite number and within the expected range (0-3)
+            if (Number.isFinite(idx) && idx >= 0 && idx <= 3) {
+                setPgpAction(savedPgpAlgo, idx, false);
+            } else {
+                // Clear corrupted or invalid keys
+                localStorage.removeItem('activePgpIdx');
+                localStorage.removeItem('activePgpAlgo');
+            }
         }
 
         updateThemeIcons();

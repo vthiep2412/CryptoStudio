@@ -83,8 +83,7 @@
                 </div>
 
                 <div class="space-y-4">
-                    <h2 class="text-sm font-semibold uppercase tracking-widest text-emerald-500">Security Passphrase
-                    </h2>
+                    <label for="passphrase" class="text-sm font-semibold uppercase tracking-widest text-emerald-500">Security Passphrase</label>
                     <div class="space-y-3">
                         <div class="relative group">
                             <input type="password" id="passphrase" placeholder="Enter a strong passphrase..."
@@ -340,8 +339,7 @@
                 setTimeout(() => svg.classList.remove('animate-icon'), 300);
             }
             
-            ui.strengthBar.style.width = '100%';
-          ui.passphrase.dispatchEvent(new Event('input'));
+            ui.passphrase.dispatchEvent(new Event('input'));
         });
 
         function setAlgo(type) {
