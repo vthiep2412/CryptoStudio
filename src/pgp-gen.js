@@ -1,5 +1,6 @@
 import { toggleTheme, initTheme } from './theme.js';
 import * as zip from '@zip.js/zip.js';
+import DOMPurify from 'dompurify';
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 let currentAlgo = 'ecc';
@@ -42,10 +43,7 @@ function setupListeners() {
     ui.togglePass.addEventListener('click', () => {
         const type = ui.passphrase.type === 'password' ? 'text' : 'password';
         ui.passphrase.type = type;
-        ui.togglePass.textContent = '';
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(type === 'password' ? icons.eye : icons.eyeOff, 'image/svg+xml');
-        ui.togglePass.appendChild(doc.documentElement);
+        ui.togglePass.innerHTML = DOMPurify.sanitize(type === 'password' ? icons.eye : icons.eyeOff);
 
         const label = document.querySelector('label[for="passphrase"]');
         if (label) label.innerText = `PASSPHRASE (${type === 'password' ? 'HIDDEN' : 'VISIBLE'})`;
@@ -90,10 +88,7 @@ function setupListeners() {
 
         ui.passphrase.value = result;
         ui.passphrase.type = 'text';
-        ui.togglePass.textContent = '';
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(icons.eyeOff, 'image/svg+xml');
-        ui.togglePass.appendChild(doc.documentElement);
+        ui.togglePass.innerHTML = DOMPurify.sanitize(icons.eyeOff);
 
         const svg = ui.togglePass.querySelector('svg');
         if (svg) {
