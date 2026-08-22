@@ -21,6 +21,7 @@
   },
   "homepage": "https://github.com/vthiep2412/CryptoStudio#readme",
   "dependencies": {
+    "@openpgp/web-stream-tools": "^0.3.1",
     "@zip.js/zip.js": "^2.8.55",
     "crypto-js": "^4.2.0",
     "dompurify": "^3.4.14",
