@@ -364,7 +364,11 @@ export async function executeTransformation() {
         errorSpan.className = 'text-red-400 flex items-start gap-2 font-mono text-xs';
 
         const svgHTML = '<svg class="w-4 h-4 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>';
-        errorSpan.insertAdjacentHTML('beforeend', svgHTML);
+
+        // Use DOM parsing to avoid sourcery warning
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(svgHTML, 'image/svg+xml');
+        errorSpan.appendChild(doc.documentElement);
 
         const messageSpan = document.createElement('span');
 
@@ -422,8 +426,10 @@ export function togglePgpPass() {
     const eye = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5"><path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"/><circle cx="12" cy="12" r="3"/></svg>`;
     const eyeOff = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5"><path d="m15 18-.722-3.25"/><path d="M2 8a10.645 10.645 0 0 0 20 0"/><path d="m20 15-1.726-2.05"/><path d="m4 15 1.726-2.05"/><path d="m9 18 .722-3.25"/></svg>`;
 
-    btn.innerHTML = '';
-    btn.insertAdjacentHTML('beforeend', type === 'password' ? eye : eyeOff);
+    btn.textContent = '';
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(type === 'password' ? eye : eyeOff, 'image/svg+xml');
+    btn.appendChild(doc.documentElement);
 
     const label = document.querySelector('label[for="pgpPassphrase"]');
     if (label) label.innerText = `PGP PASSPHRASE (${type === 'password' ? 'HIDDEN' : 'VISIBLE'})`;

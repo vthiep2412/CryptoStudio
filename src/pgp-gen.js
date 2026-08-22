@@ -42,8 +42,10 @@ function setupListeners() {
     ui.togglePass.addEventListener('click', () => {
         const type = ui.passphrase.type === 'password' ? 'text' : 'password';
         ui.passphrase.type = type;
-        ui.togglePass.innerHTML = '';
-        ui.togglePass.insertAdjacentHTML('beforeend', type === 'password' ? icons.eye : icons.eyeOff);
+        ui.togglePass.textContent = '';
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(type === 'password' ? icons.eye : icons.eyeOff, 'image/svg+xml');
+        ui.togglePass.appendChild(doc.documentElement);
 
         const label = document.querySelector('label[for="passphrase"]');
         if (label) label.innerText = `PASSPHRASE (${type === 'password' ? 'HIDDEN' : 'VISIBLE'})`;
@@ -88,8 +90,10 @@ function setupListeners() {
 
         ui.passphrase.value = result;
         ui.passphrase.type = 'text';
-        ui.togglePass.innerHTML = '';
-        ui.togglePass.insertAdjacentHTML('beforeend', icons.eyeOff);
+        ui.togglePass.textContent = '';
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(icons.eyeOff, 'image/svg+xml');
+        ui.togglePass.appendChild(doc.documentElement);
 
         const svg = ui.togglePass.querySelector('svg');
         if (svg) {

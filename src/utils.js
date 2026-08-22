@@ -41,7 +41,9 @@ export function initializeCustomDropdowns() {
 
         const arrow = document.createElement('div');
         arrow.className = 'dropdown-arrow';
-        arrow.innerHTML = `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M19 9l-7 7-7-7" /></svg>`;
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(`<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M19 9l-7 7-7-7" /></svg>`, 'image/svg+xml');
+        arrow.appendChild(doc.documentElement);
 
         trigger.appendChild(label);
         trigger.appendChild(arrow);
