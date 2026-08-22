@@ -21,6 +21,14 @@
   },
   "homepage": "https://github.com/vthiep2412/CryptoStudio#readme",
   "devDependencies": {
+    "autoprefixer": "^10.5.4",
+    "postcss": "^8.5.26",
+    "tailwindcss": "^3.4.1",
     "vite": "^8.0.8"
+  },
+  "dependencies": {
+    "@zip.js/zip.js": "^2.8.55",
+    "crypto-js": "^4.2.0",
+    "openpgp": "^6.3.1"
   }
 }
