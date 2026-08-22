@@ -64,7 +64,9 @@ function setAnimatedStatus(target, onComplete) {
             if (iteration >= lockTime) {
                 display += target[i] || "";
             } else if (iteration >= stagger) {
-                display += chars[Math.floor(Math.random() * chars.length)];
+                const randomValues = new Uint32Array(1);
+                crypto.getRandomValues(randomValues);
+                display += chars[randomValues[0] % chars.length];
                 complete = false;
             } else {
                 display += current[i] || "";
@@ -86,7 +88,9 @@ function startStatusCycling() {
     if (phraseCycleInterval) clearTimeout(phraseCycleInterval);
 
     const update = () => {
-        const phrase = statusPhrases[Math.floor(Math.random() * statusPhrases.length)];
+        const randomValues = new Uint32Array(1);
+        crypto.getRandomValues(randomValues);
+        const phrase = statusPhrases[randomValues[0] % statusPhrases.length];
         setAnimatedStatus(phrase, () => {
             phraseCycleInterval = setTimeout(update, 1000);
         });
@@ -228,7 +232,7 @@ function updatePGPFields() {
 }
 
 function populateSelect() {
-    els.algorithmSelect.innerHTML = '';
+    els.algorithmSelect.textContent = '';
     algorithms[currentCategory].forEach(algo => {
         const opt = document.createElement('option');
         opt.value = algo.id;
@@ -305,19 +309,24 @@ export async function executeTransformation() {
     const pgpPass = els.pgpPassphraseInput.value.trim();
     els.recoveryArea.classList.add('hidden');
     els.recoveryArea.classList.remove('flex');
-    els.recoveryArea.innerHTML = '';
+    els.recoveryArea.textContent = '';
 
     if (!text) {
-        els.outputArea.innerHTML = '<span class="text-gray-600 italic font-mono text-xs">Output will appear here...</span>';
+        els.outputArea.textContent = 'Output will appear here...';
+        els.outputArea.className = 'bg-[var(--bg-app)] border border-[var(--border-card)] rounded-lg p-4 flex-grow min-h-[150px] md:min-h-[300px] overflow-auto custom-scrollbar font-mono text-xs text-gray-600 italic break-all whitespace-pre-wrap';
         if (els.statusText) els.statusText.innerText = '';
         return;
     }
 
     if (currentCategory !== 'encoding' && !key) {
-        els.outputArea.innerHTML = `<span class="text-red-400 font-mono text-xs">Please provide a ${currentCategory === 'pgp' ? 'PGP Key' : 'Secret Key'}.</span>`;
+        els.outputArea.textContent = `Please provide a ${currentCategory === 'pgp' ? 'PGP Key' : 'Secret Key'}.`;
+        els.outputArea.className = 'bg-[var(--bg-app)] border border-[var(--border-card)] rounded-lg p-4 flex-grow min-h-[150px] md:min-h-[300px] overflow-auto custom-scrollbar font-mono text-xs text-red-400 break-all whitespace-pre-wrap';
         if (els.statusText) els.statusText.innerText = '';
         return;
     }
+
+    // reset output class on success/process
+    els.outputArea.className = 'bg-[var(--bg-app)] border border-[var(--border-card)] rounded-lg p-4 flex-grow min-h-[150px] md:min-h-[300px] overflow-auto custom-scrollbar font-mono text-sm text-[var(--text-secondary)] break-all whitespace-pre-wrap';
 
     if (els.statusText) {
         els.statusText.className = 'text-xs text-emerald-500 font-bold uppercase tracking-widest';
@@ -350,10 +359,12 @@ export async function executeTransformation() {
     } catch (err) {
         if (currentRequestId !== lastRequestId) return;
 
-        els.outputArea.innerHTML = '';
+        els.outputArea.textContent = '';
         const errorSpan = document.createElement('span');
         errorSpan.className = 'text-red-400 flex items-start gap-2 font-mono text-xs';
-        errorSpan.innerHTML = '<svg class="w-4 h-4 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>';
+
+        const svgHTML = '<svg class="w-4 h-4 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>';
+        errorSpan.insertAdjacentHTML('beforeend', svgHTML);
 
         const messageSpan = document.createElement('span');
 
@@ -362,7 +373,7 @@ export async function executeTransformation() {
             errorSpan.appendChild(messageSpan);
             els.outputArea.appendChild(errorSpan);
 
-            els.recoveryArea.innerHTML = '';
+            els.recoveryArea.textContent = '';
             const recoveryBtn = document.createElement('button');
             recoveryBtn.className = 'w-fit px-4 py-2 bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-400 text-xs font-medium rounded-lg border border-emerald-500/30 transition-all uppercase tracking-wider';
             recoveryBtn.textContent = 'Add wrapper for this action';
@@ -411,7 +422,8 @@ export function togglePgpPass() {
     const eye = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5"><path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"/><circle cx="12" cy="12" r="3"/></svg>`;
     const eyeOff = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5"><path d="m15 18-.722-3.25"/><path d="M2 8a10.645 10.645 0 0 0 20 0"/><path d="m20 15-1.726-2.05"/><path d="m4 15 1.726-2.05"/><path d="m9 18 .722-3.25"/></svg>`;
 
-    btn.innerHTML = type === 'password' ? eye : eyeOff;
+    btn.innerHTML = '';
+    btn.insertAdjacentHTML('beforeend', type === 'password' ? eye : eyeOff);
 
     const label = document.querySelector('label[for="pgpPassphrase"]');
     if (label) label.innerText = `PGP PASSPHRASE (${type === 'password' ? 'HIDDEN' : 'VISIBLE'})`;

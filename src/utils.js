@@ -50,7 +50,7 @@ export function initializeCustomDropdowns() {
         optionsList.className = 'dropdown-options custom-scrollbar';
 
         const syncOptions = () => {
-            optionsList.innerHTML = '';
+            optionsList.textContent = '';
             Array.from(select.options).forEach((opt, idx) => {
                 const optionEl = document.createElement('div');
                 optionEl.className = 'dropdown-option' + (idx === select.selectedIndex ? ' selected' : '');
