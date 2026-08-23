@@ -90,6 +90,10 @@ function setupListeners() {
         ui.passphrase.type = 'text';
         ui.togglePass.innerHTML = DOMPurify.sanitize(icons.eyeOff);
 
+        const label = document.querySelector('label[for="passphrase"]');
+        if (label) label.innerText = `PASSPHRASE (VISIBLE)`;
+        ui.togglePass.setAttribute('aria-pressed', 'true');
+
         const svg = ui.togglePass.querySelector('svg');
         if (svg) {
             svg.classList.add('animate-icon');
