@@ -128,3 +128,63 @@ export function uint8ArrayToWordArray(u8Array) {
     }
     return CryptoJS.lib.WordArray.create(words, u8Array.length);
 }
+
+// AES-CTR Encryption using Native Web Crypto API
+export async function encryptAesCtr(text, passphrase, iterations) {
+    const encoder = new TextEncoder();
+    const salt = crypto.getRandomValues(new Uint8Array(16));
+    const counter = crypto.getRandomValues(new Uint8Array(16)); // 128-bit counter block
+
+    const passwordKey = await crypto.subtle.importKey(
+        "raw", encoder.encode(passphrase), "PBKDF2", false, ["deriveKey"]
+    );
+
+    const key = await crypto.subtle.deriveKey(
+        { name: "PBKDF2", salt: salt, iterations: iterations, hash: "SHA-256" },
+        passwordKey,
+        { name: "AES-CTR", length: 256 },
+        false,
+        ["encrypt"]
+    );
+
+    const ciphertextBuffer = await crypto.subtle.encrypt(
+        { name: "AES-CTR", counter: counter, length: 64 },
+        key,
+        encoder.encode(text)
+    );
+
+    return `${bufferToBase64(salt)}:${bufferToBase64(counter)}:${bufferToBase64(ciphertextBuffer)}`;
+}
+
+// AES-CTR Decryption using Native Web Crypto API
+export async function decryptAesCtr(formattedString, passphrase, iterations) {
+    const clean = formattedString.replace(/\s+/g, '');
+    const parts = clean.split(':');
+    if (parts.length !== 3) throw new Error("Invalid AES-CTR format.");
+
+    const salt = base64ToBuffer(parts[0]);
+    const counter = base64ToBuffer(parts[1]);
+    const ciphertext = base64ToBuffer(parts[2]);
+
+    const encoder = new TextEncoder();
+    const passwordKey = await crypto.subtle.importKey(
+        "raw", encoder.encode(passphrase), "PBKDF2", false, ["deriveKey"]
+    );
+
+    const key = await crypto.subtle.deriveKey(
+        { name: "PBKDF2", salt: salt, iterations: iterations, hash: "SHA-256" },
+        passwordKey,
+        { name: "AES-CTR", length: 256 },
+        false,
+        ["decrypt"]
+    );
+
+    const decryptedBuffer = await crypto.subtle.decrypt(
+        { name: "AES-CTR", counter: new Uint8Array(counter), length: 64 },
+        key,
+        ciphertext
+    );
+
+    const decoder = new TextDecoder();
+    return decoder.decode(decryptedBuffer);
+}

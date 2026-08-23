@@ -17,13 +17,15 @@
 }
 
 :root.light {
-    --bg-app: #f8fafc;
+    --bg-app: #f1f5f9;
     --bg-card: #ffffff;
-    --bg-card-alt: #f1f5f9;
-    --border-card: #e2e8f0;
+    --bg-card-alt: #f8fafc;
+    --border-card: #cbd5e1;
     --text-primary: #0f172a;
-    --text-secondary: #64748b;
-    --text-dim: #94a3b8;
+    --text-secondary: #334155;
+    --text-dim: #64748b;
+    --accent: #059669;
+    --accent-hover: #047857;
 
     color-scheme: light;
 }
@@ -130,7 +132,7 @@ body {
     visibility: hidden;
     transform: translateY(-10px) scale(0.95);
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    max-height: 250px;
+    max-height: 280px;
     overflow-y: auto;
 }
 
@@ -140,13 +142,49 @@ body {
     transform: translateY(0) scale(1);
 }
 
+.dropdown-group-header {
+    font-size: 0.7rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--accent);
+    padding: 0.45rem 0.75rem;
+    margin-left: -0.5rem;
+    margin-right: 0;
+    margin-top: 0.4rem;
+    margin-bottom: 0.35rem;
+    background: var(--bg-card-alt);
+    border-left: 3px solid var(--accent);
+    border-top-right-radius: 0.5rem;
+    border-bottom-right-radius: 0.5rem;
+    display: flex;
+    align-items: center;
+    pointer-events: none;
+    user-select: none;
+}
+
+:root.light .dropdown-group-header {
+    background: #059669;
+    color: #f8fafc;
+    border-left: 3px solid #047857;
+}
+
+.dropdown-group-header:first-child {
+    margin-top: -0.25rem;
+}
+
 .dropdown-option {
     padding: 0.625rem 0.75rem;
     border-radius: 0.5rem;
     color: var(--text-secondary);
     font-size: 0.875rem;
+    margin-bottom: 0.15rem;
     transition: all 0.2s ease;
     cursor: pointer;
+}
+
+.dropdown-option:last-child {
+    margin-bottom: 0;
 }
 
 .dropdown-option:hover {
@@ -154,10 +192,23 @@ body {
     color: var(--text-primary);
 }
 
+:root.light .dropdown-option:hover {
+    background: #e2e8f0;
+    color: #0f172a;
+    font-weight: 500;
+}
+
 .dropdown-option.selected {
-    background: rgba(16, 185, 129, 0.1);
+    background: rgba(16, 185, 129, 0.15);
     color: var(--accent);
-    font-weight: 600;
+    font-weight: 700;
+}
+
+:root.light .dropdown-option.selected {
+    background: #d1fae5;
+    color: #047857;
+    font-weight: 700;
+    border-left: 3px solid #059669;
 }
 
 /* Spread Ripple Effect */

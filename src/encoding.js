@@ -86,3 +86,114 @@ export const Base58 = {
         return decoder.decode(new Uint8Array(bytes.reverse()));
     }
 };
+
+// Base64URL (RFC 4648)
+export const Base64URL = {
+    encode: (text) => btoa(unescape(encodeURIComponent(text))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''),
+    decode: (str) => {
+        let b64 = str.replace(/-/g, '+').replace(/_/g, '/');
+        while (b64.length % 4) b64 += '=';
+        return decodeURIComponent(escape(atob(b64)));
+    }
+};
+
+// Base85 / Ascii85 (btoa / atob style)
+export const Base85 = {
+    encode: function (text) {
+        const bytes = encoder.encode(text);
+        let out = '';
+        for (let i = 0; i < bytes.length; i += 4) {
+            const chunk = bytes.subarray(i, i + 4);
+            let val = 0;
+            for (let j = 0; j < 4; j++) {
+                val = val * 256 + (j < chunk.length ? chunk[j] : 0);
+            }
+            // convert 32-bit uint to 5 base-85 chars
+            const tuple = [];
+            for (let j = 0; j < 5; j++) {
+                tuple.unshift(String.fromCharCode((val % 85) + 33));
+                val = Math.floor(val / 85);
+            }
+            const pad = 4 - chunk.length;
+            out += tuple.slice(0, 5 - pad).join('');
+        }        return `<~${out}~>`;
+    },
+    decode: function (str) {
+        let clean = str.replace(/\s+/g, '');
+        if (clean.startsWith('<~')) clean = clean.slice(2);
+        if (clean.endsWith('~>')) clean = clean.slice(0, -2);
+
+        const bytes = [];
+        for (let i = 0; i < clean.length; i += 5) {
+            const chunk = clean.slice(i, i + 5);
+            let val = 0;
+            for (let j = 0; j < 5; j++) {
+                const code = j < chunk.length ? chunk.charCodeAt(j) - 33 : 84;
+                if (code < 0 || code > 84) throw new Error('Invalid Base85 character.');
+                val = val * 85 + code;
+            }
+            const pad = 5 - chunk.length;
+            const fullBytes = [
+                (val >>> 24) & 255,
+                (val >>> 16) & 255,
+                (val >>> 8) & 255,
+                val & 255
+            ];
+            for (let j = 0; j < 4 - pad; j++) {
+                bytes.push(fullBytes[j]);
+            }
+        }
+        return decoder.decode(new Uint8Array(bytes));
+    }
+};
+
+// Octal Encoder / Decoder
+export const Octal = {
+    encode: (text) => Array.from(encoder.encode(text)).map(b => b.toString(8).padStart(3, '0')).join(' '),
+    decode: (text) => {
+        const parts = text.trim().split(/\s+/).filter(Boolean);
+        const bytes = new Uint8Array(parts.map(p => {
+            if (!/^[0-7]+$/.test(p)) throw new Error('Invalid octal byte.');
+            const num = parseInt(p, 8);
+            if (isNaN(num) || num < 0 || num > 255) throw new Error('Invalid octal byte.');
+            return num;
+        }));
+        return decoder.decode(bytes);
+    }
+};
+
+// ROT13 / Caesar Shift
+export const ROT13 = {
+    encode: (text) => text.replace(/[a-zA-Z]/g, (c) => {
+        const base = c <= 'Z' ? 65 : 97;
+        return String.fromCharCode(((c.charCodeAt(0) - base + 13) % 26) + base);
+    }),
+    decode: (text) => ROT13.encode(text) // ROT13 is symmetric
+};
+
+// HTML Entities
+export const HTMLEntities = {
+    encode: (text) => text.replace(/[\u00A0-\u9999<>&"']/g, (c) => `&#${c.charCodeAt(0)};`),
+    decode: (text) => {
+        const doc = new DOMParser().parseFromString(text, 'text/html');
+        return doc.documentElement.textContent || '';
+    }
+};
+
+// Morse Code Map
+const MORSE_MAP = {
+    'A': '.-', 'B': '-...', 'C': '-.-.', 'D': '-..', 'E': '.', 'F': '..-.',
+    'G': '--.', 'H': '....', 'I': '..', 'J': '.---', 'K': '-.-', 'L': '.-..',
+    'M': '--', 'N': '-.', 'O': '---', 'P': '.--.', 'Q': '--.-', 'R': '.-.',
+    'S': '...', 'T': '-', 'U': '..-', 'V': '...-', 'W': '.--', 'X': '-..-',
+    'Y': '-.--', 'Z': '--..', '1': '.----', '2': '..---', '3': '...--',
+    '4': '....-', '5': '.....', '6': '-....', '7': '--...', '8': '---..',
+    '9': '----.', '0': '-----', ' ': '/', '.': '.-.-.-', ',': '--..--',
+    '?': '..--..', '!': '-.-.--', '@': '.--.-.'
+};
+const REVERSE_MORSE = Object.entries(MORSE_MAP).reduce((acc, [k, v]) => { acc[v] = k; return acc; }, {});
+
+export const MorseCode = {
+    encode: (text) => text.toUpperCase().split('').map(c => MORSE_MAP[c] || c).join(' '),
+    decode: (text) => text.trim().split(/\s+/).map(m => REVERSE_MORSE[m] || m).join('').replace(/\//g, ' ')
+};

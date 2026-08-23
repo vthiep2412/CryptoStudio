@@ -53,7 +53,18 @@ export function initializeCustomDropdowns() {
 
         const syncOptions = () => {
             optionsList.textContent = '';
+            let currentGroup = null;
+
             Array.from(select.options).forEach((opt, idx) => {
+                const groupName = opt.dataset.group || opt.parentElement?.label;
+                if (groupName && groupName !== currentGroup) {
+                    currentGroup = groupName;
+                    const header = document.createElement('div');
+                    header.className = 'dropdown-group-header';
+                    header.innerText = groupName;
+                    optionsList.appendChild(header);
+                }
+
                 const optionEl = document.createElement('div');
                 optionEl.className = 'dropdown-option' + (idx === select.selectedIndex ? ' selected' : '');
                 optionEl.innerText = opt.text;
@@ -73,7 +84,13 @@ export function initializeCustomDropdowns() {
                 syncOptions();
                 trigger.classList.add('open');
                 optionsList.classList.add('show');
-            } else {
+                const selectedEl = optionsList.querySelector('.dropdown-option.selected');
+                if (selectedEl) {
+                    requestAnimationFrame(() => {
+                        optionsList.scrollTop =
+                            selectedEl.offsetTop - (optionsList.clientHeight - selectedEl.offsetHeight) / 2;
+                    });
+                }            } else {
                 trigger.classList.remove('open');
                 optionsList.classList.remove('show');
             }
@@ -88,10 +105,12 @@ export function initializeCustomDropdowns() {
         };
 
         if (select._observer) select._observer.disconnect();
-        const observer = new MutationObserver(() => {
+        const updateLabel = () => {
             label.innerText = select.options[select.selectedIndex]?.text || 'Select...';
-        });
+        };
+        const observer = new MutationObserver(updateLabel);
         observer.observe(select, { childList: true, attributes: true });
+        select.addEventListener('change', updateLabel);
         select._observer = observer;
 
         container.appendChild(trigger);

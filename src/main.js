@@ -11,6 +11,7 @@ let currentPgpAlgo = 'pgp-encrypt';
 const els = {
     get btnEncoding() { return document.getElementById('btnEncoding'); },
     get btnEncryption() { return document.getElementById('btnEncryption'); },
+    get btnHashing() { return document.getElementById('btnHashing'); },
     get btnPGP() { return document.getElementById('btnPGP'); },
     get actionArea() { return document.getElementById('actionArea'); },
     get pgpActionArea() { return document.getElementById('pgpActionArea'); },
@@ -25,6 +26,8 @@ const els = {
     get genKeyLink() { return document.getElementById('genKeyLink'); },
     get inputText() { return document.getElementById('inputText'); },
     get cryptoKey() { return document.getElementById('cryptoKey'); },
+    get receivedMac() { return document.getElementById('receivedMac'); },
+    get receivedMacContainer() { return document.getElementById('receivedMacContainer'); },
     get pgpPassphraseInput() { return document.getElementById('pgpPassphrase'); },
     get outputArea() { return document.getElementById('outputArea'); },
     get recoveryArea() { return document.getElementById('recoveryArea'); },
@@ -129,7 +132,7 @@ export function setCategory(cat, save = true) {
     if (save) localStorage.setItem('activeCategory', cat);
     const pill = document.getElementById('pillBg');
 
-    [els.btnEncoding, els.btnEncryption, els.btnPGP].forEach(b => b.classList.remove('active'));
+    [els.btnEncoding, els.btnEncryption, els.btnHashing, els.btnPGP].forEach(b => b?.classList.remove('active'));
 
     if (cat === 'encoding') {
         pill.style.setProperty('--pill-translate', '0%');
@@ -153,8 +156,16 @@ export function setCategory(cat, save = true) {
         els.algoSelectContainer.classList.remove('hidden');
         els.actionArea.classList.remove('hidden');
         els.pgpActionArea.classList.add('hidden');
-    } else {
+    } else if (cat === 'hashing') {
         pill.style.setProperty('--pill-translate', '200%');
+        els.btnHashing.classList.add('active');
+        els.labelProcess.textContent = "Hash / Sign";
+        els.labelReverse.textContent = "Verify";
+        els.algoSelectContainer.classList.remove('hidden');
+        els.actionArea.classList.remove('hidden');
+        els.pgpActionArea.classList.add('hidden');
+    } else {
+        pill.style.setProperty('--pill-translate', '300%');
         els.btnPGP.classList.add('active');
         els.keyContainer.classList.remove('hidden');
         els.keyContainer.classList.add('flex');
@@ -165,8 +176,8 @@ export function setCategory(cat, save = true) {
         els.pgpActionArea.classList.add('flex');
     }
 
-    updatePGPFields();
     populateSelect();
+    updatePGPFields();
     executeTransformation();
     initializeCustomDropdowns();
 }
@@ -194,7 +205,10 @@ function updatePGPFields() {
     if (currentCategory === 'pgp') {
         const algo = currentPgpAlgo;
         els.pgpActionArea.classList.remove('hidden');
-        els.pgpActionArea.classList.add('flex');
+        els.pgpActionArea.classList.add('flex', 'col-span-full');
+        els.algoSelectContainer.classList.add('hidden');
+        els.receivedMacContainer?.classList.add('hidden');
+        els.receivedMacContainer?.classList.remove('flex');
         if (protection) protection.classList.add('hidden');
 
         els.keyContainer.classList.remove('hidden');
@@ -212,17 +226,62 @@ function updatePGPFields() {
             els.cryptoKeyLabel.textContent = algo === 'pgp-encrypt' ? "Recipient's Public Key" : "Sender's Public Key";
             els.cryptoKey.placeholder = "Paste Armored Public Key here...";
         }
+    } else if (currentCategory === 'hashing') {
+        els.pgpActionArea.classList.add('hidden');
+        els.pgpActionArea.classList.remove('flex', 'col-span-full');
+        els.pgpPassContainer.classList.add('hidden');
+        els.pgpPassContainer.classList.remove('flex');
+        els.genKeyLink.classList.add('hidden');
+        if (protection) protection.classList.add('hidden');
+
+        const algo = els.algorithmSelect.value;
+        const isMAC = algo.startsWith('hmac') || algo === 'poly1305' || algo === 'blake3-mac';
+        const action = getAction();
+
+        if (isMAC) {
+            els.actionArea.classList.remove('hidden');
+            els.algoSelectContainer.classList.remove('col-span-full', 'sm:col-start-2');
+            els.keyContainer.classList.remove('hidden');
+            els.keyContainer.classList.add('flex');
+            els.cryptoKeyLabel.textContent = "Secret Key / HMAC Key";
+            els.cryptoKey.placeholder = "Enter your secret key...";
+
+            if (action === 'reverse') {
+                els.receivedMacContainer?.classList.remove('hidden');
+                els.receivedMacContainer?.classList.add('flex');
+            } else {
+                els.receivedMacContainer?.classList.add('hidden');
+                els.receivedMacContainer?.classList.remove('flex');
+            }
+        } else {
+            // Non-MAC standard hash: Reset radio action to 'process'
+            const processRadio = document.querySelector('input[name="action"][value="process"]');
+            if (processRadio) processRadio.checked = true;
+
+            els.actionArea.classList.add('hidden');
+            els.algoSelectContainer.classList.remove('col-span-full');
+            els.algoSelectContainer.classList.add('sm:col-start-2');
+            els.keyContainer.classList.add('hidden');
+            els.keyContainer.classList.remove('flex');
+            els.receivedMacContainer?.classList.add('hidden');
+            els.receivedMacContainer?.classList.remove('flex');
+        }
     } else {
+        els.algoSelectContainer.classList.remove('col-span-full', 'sm:col-start-2');
         els.pgpActionArea.classList.add('hidden');
         els.pgpActionArea.classList.remove('flex');
         els.pgpPassContainer.classList.add('hidden');
         els.pgpPassContainer.classList.remove('flex');
+        els.receivedMacContainer?.classList.add('hidden');
+        els.receivedMacContainer?.classList.remove('flex');
         els.cryptoKeyLabel.textContent = "Secret Key / Password";
         els.cryptoKey.placeholder = "Enter your secret key or password...";
         els.actionArea.classList.remove('hidden');
 
         if (protection) {
-            if (currentCategory === 'encryption' && els.algorithmSelect.value !== 'xor') {
+            const algo = els.algorithmSelect.value;
+            const nonHardened = ['xor', 'tripledes', 'rabbit', 'rc4'];
+            if (currentCategory === 'encryption' && !nonHardened.includes(algo)) {
                 protection.classList.remove('hidden');
                 protection.classList.add('flex');
             } else {
@@ -230,14 +289,30 @@ function updatePGPFields() {
             }
         }
     }
+
+    // Prefix toggle switch visibility (Encryption tab, all algorithms except XOR, and in Encrypt mode)
+    const prefixContainer = document.getElementById('prefixToggleContainer');
+    if (prefixContainer) {
+        const algo = els.algorithmSelect.value;
+        const action = getAction();
+        if (currentCategory === 'encryption' && algo !== 'xor' && action === 'process') {
+            prefixContainer.classList.remove('hidden');
+            prefixContainer.classList.add('flex');
+        } else {
+            prefixContainer.classList.add('hidden');
+            prefixContainer.classList.remove('flex');
+        }
+    }
 }
 
 function populateSelect() {
     els.algorithmSelect.textContent = '';
-    algorithms[currentCategory].forEach(algo => {
+    const list = algorithms[currentCategory] || [];
+    list.forEach(algo => {
         const opt = document.createElement('option');
         opt.value = algo.id;
         opt.textContent = algo.name;
+        if (algo.group) opt.dataset.group = algo.group;
         els.algorithmSelect.appendChild(opt);
     });
 }
@@ -245,13 +320,18 @@ function populateSelect() {
 function addEventListeners() {
     els.inputText.addEventListener('input', debouncedExecute);
     els.cryptoKey.addEventListener('input', debouncedExecute);
+    els.receivedMac?.addEventListener('input', debouncedExecute);
     els.pgpPassphraseInput.addEventListener('input', debouncedExecute);
+    document.getElementById('addAlgoPrefix')?.addEventListener('change', debouncedExecute);
     els.algorithmSelect.addEventListener('change', () => {
         updatePGPFields();
         executeTransformation();
     });
     els.radioActions.forEach(radio => {
-        radio.addEventListener('change', executeTransformation);
+        radio.addEventListener('change', () => {
+            updatePGPFields();
+            executeTransformation();
+        });
     });
 }
 
@@ -319,7 +399,10 @@ export async function executeTransformation() {
         return;
     }
 
-    if (currentCategory !== 'encoding' && !key) {
+    const isMAC = algo.startsWith('hmac') || algo === 'poly1305' || algo === 'blake3-mac';
+    const requiresKey = currentCategory === 'encryption' || currentCategory === 'pgp' || (currentCategory === 'hashing' && isMAC);
+
+    if (requiresKey && !key) {
         els.outputArea.textContent = `Please provide a ${currentCategory === 'pgp' ? 'PGP Key' : 'Secret Key'}.`;
         els.outputArea.className = 'bg-[var(--bg-app)] border border-[var(--border-card)] rounded-lg p-4 flex-grow min-h-[150px] md:min-h-[300px] overflow-auto custom-scrollbar font-mono text-xs text-red-400 break-all whitespace-pre-wrap';
         if (els.statusText) els.statusText.innerText = '';
@@ -341,6 +424,26 @@ export async function executeTransformation() {
         let result = "";
         if (currentCategory === 'pgp') {
             result = await transformer.process(text, key, pgpPass);
+        } else if (currentCategory === 'hashing' && action === 'reverse') {
+            const received = els.receivedMac?.value.trim();
+            if (!received) {
+                els.outputArea.textContent = 'Please paste the Received MAC / Signature above to verify.';
+                els.outputArea.className = 'bg-[var(--bg-app)] border border-[var(--border-card)] rounded-lg p-4 flex-grow min-h-[150px] md:min-h-[300px] overflow-auto custom-scrollbar font-mono text-xs text-yellow-500 italic break-all whitespace-pre-wrap';
+                if (els.statusText) {
+                    els.statusText.className = 'text-xs text-yellow-500 font-bold uppercase tracking-widest';
+                    stopStatusCycling('Awaiting MAC');
+                }
+                return;
+            }
+
+            const computed = await transformer.process(text, key);
+            const isValid = computed.toLowerCase() === received.toLowerCase().replace(/\s+/g, '');
+
+            if (isValid) {
+                result = `✓ AUTHENTIC / VALID MAC\n\nThe message has not been altered and matches the provided Secret Key.\n\nComputed MAC: ${computed}\nReceived MAC: ${received}`;
+            } else {
+                result = `✗ INVALID / TAMPERED MAC\n\nThe provided MAC does NOT match the computed signature for this message and key.\n\nComputed MAC: ${computed}\nReceived MAC: ${received}`;
+            }
         } else {
             if (action === 'process') {
                 result = await transformer.process(text, key);
@@ -371,7 +474,7 @@ export async function executeTransformation() {
         const messageSpan = document.createElement('span');
 
         if (err.message.includes("Misformed armored text")) {
-            messageSpan.textContent = 'Error: Misformed armor. You need to include the BEGIN/END wrapper lines.';
+            messageSpan.textContent = 'Error: Misformed armor. You need to have the BEGIN/END wrapper lines.';
             errorSpan.appendChild(messageSpan);
             els.outputArea.appendChild(errorSpan);
 
@@ -391,6 +494,55 @@ export async function executeTransformation() {
             messageSpan.textContent = 'Error: ' + err.message;
             errorSpan.appendChild(messageSpan);
             els.outputArea.appendChild(errorSpan);
+
+            // Auto-detect format from input prefix if it doesn't match the selected algorithm
+            const cleanInput = text.replace(/\s+/g, '');
+            const prefixMap = {
+                'c20p': { id: 'chacha20-poly1305', name: 'ChaCha20-Poly1305' },
+                'xc20p': { id: 'xchacha20-poly1305', name: 'XChaCha20-Poly1305' },
+                'xsalsa': { id: 'xsalsa20-poly1305', name: 'XSalsa20-Poly1305' },
+                'gcm': { id: 'aes-gcm', name: 'AES-256-GCM' },
+                'ctr': { id: 'aes-ctr', name: 'AES-256-CTR' },
+                'c20': { id: 'chacha20', name: 'ChaCha20' },
+                'salsa': { id: 'salsa20', name: 'Salsa20' }
+            };
+
+            let detected = null;
+            const prefixMatch = cleanInput.match(/^(?:lv\d:)?([a-z0-9]+):/);
+            if (prefixMatch && prefixMap[prefixMatch[1]]) {
+                detected = prefixMap[prefixMatch[1]];
+            }
+
+            if (detected && detected.id !== algo) {
+                els.recoveryArea.textContent = '';
+                const warningBox = document.createElement('div');
+                warningBox.className = 'w-full p-2 bg-amber-500/10 border border-amber-500/30 rounded-xl flex items-center justify-between gap-2 text-amber-400 font-mono';
+
+                warningBox.innerHTML = DOMPurify.sanitize(`
+                    <div class="flex items-center gap-2">
+                        <svg class="w-7 h-7 text-amber-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                        </svg>
+                        <div class="flex flex-col justify-center">
+                            <span class="text-xs font-bold text-amber-300 tracking-wide leading-snug">Algorithm Mismatch</span>
+                            <span class="text-xs text-amber-400/90 font-sans leading-tight">This ciphertext was encrypted with <strong>${detected.name}</strong></span>
+                        </div>
+                    </div>
+                `);
+
+                const switchBtn = document.createElement('button');
+                switchBtn.className = 'px-3 py-1.5 bg-amber-500/20 hover:bg-amber-500/30 text-amber-200 rounded-lg border border-amber-500/40 text-[10px] font-bold uppercase tracking-wider text-center leading-tight whitespace-pre-line transition-all shrink-0 active:scale-95';
+                switchBtn.textContent = `Switch to\n${detected.name}`;
+                switchBtn.onclick = () => {
+                    els.algorithmSelect.value = detected.id;
+                    els.algorithmSelect.dispatchEvent(new Event('change'));
+                };
+
+                warningBox.appendChild(switchBtn);
+                els.recoveryArea.appendChild(warningBox);
+                els.recoveryArea.classList.remove('hidden');
+                els.recoveryArea.classList.add('flex');
+            }
         }
         if (els.statusText) {
             els.statusText.className = 'text-[10px] text-red-500 font-bold uppercase tracking-widest';

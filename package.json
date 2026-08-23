@@ -21,6 +21,8 @@
   },
   "homepage": "https://github.com/vthiep2412/CryptoStudio#readme",
   "dependencies": {
+    "@noble/ciphers": "^2.3.0",
+    "@noble/hashes": "^2.3.0",
     "@openpgp/web-stream-tools": "^0.3.1",
     "@zip.js/zip.js": "^2.8.55",
     "crypto-js": "^4.2.0",

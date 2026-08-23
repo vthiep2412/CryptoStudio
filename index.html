@@ -33,17 +33,18 @@
                 class="bg-[var(--bg-card)] border border-[var(--border-card)] rounded-xl p-4 md:p-5 shadow-xl flex flex-col gap-4 md:gap-5 h-full">
 
                 <!-- Operation Type -->
-                <div class="pill-container pill-container-3 w-full">
+                <div class="pill-container pill-container-4 w-full">
                     <div id="pillBg" class="pill-bg"></div>
                     <button id="btnEncoding" class="pill-btn active" onclick="setCategory('encoding')">Encoding</button>
                     <button id="btnEncryption" class="pill-btn" onclick="setCategory('encryption')">Encryption</button>
+                    <button id="btnHashing" class="pill-btn" onclick="setCategory('hashing')">Hashing</button>
                     <button id="btnPGP" class="pill-btn" onclick="setCategory('pgp')">PGP</button>
                 </div>
 
                 <!-- Action & Algorithm Select -->
-                <div id="controlsContainer" class="flex flex-col sm:flex-row gap-4">
+                <div id="controlsContainer" class="grid grid-cols-1 sm:grid-cols-2 gap-4 items-start">
                     <!-- Standard Action Area (Encoding/Encryption) -->
-                    <div id="actionArea" class="flex-1 flex flex-col gap-2">
+                    <div id="actionArea" class="flex flex-col gap-2">
                         <label class="text-xs text-[var(--text-secondary)] font-semibold uppercase tracking-wider">Action</label>
                         <div class="flex gap-4 items-center h-10 px-2">
                             <label class="flex items-center gap-2 cursor-pointer group">
@@ -65,7 +66,7 @@
                         </div>
                     </div>
 
-                    <div id="pgpActionArea" class="hidden flex-1 flex flex-col gap-2">
+                    <div id="pgpActionArea" class="hidden flex-col gap-2">
                         <label class="text-xs text-[var(--text-secondary)] font-semibold uppercase tracking-wider">Action</label>
                         <div class="pill-container pill-container-4 w-full">
                             <div id="pgpPillBg" class="pill-bg"></div>
@@ -75,7 +76,7 @@
                             <button class="pgp-switch-btn pill-btn" onclick="setPgpAction('pgp-verify', 3)">Verify</button>
                         </div>
                     </div>
-                    <div id="algoSelectContainer" class="flex-1 flex flex-col gap-2">
+                    <div id="algoSelectContainer" class="flex flex-col gap-2">
                         <label for="algorithmSelect"
                             class="text-xs text-[var(--text-secondary)] font-semibold uppercase tracking-wider">Algorithm</label>
                         <select id="algorithmSelect"
@@ -92,7 +93,7 @@
                             class="text-xs text-[var(--text-secondary)] font-semibold uppercase tracking-wider">Secret Key / PGP
                             Key</label>
                         <a id="genKeyLink" href="pgp-gen.html"
-                            class="hidden text-xs text-emerald-400 hover:text-emerald-300 font-bold bg-emerald-400/10 px-4 py-2 rounded-lg border border-emerald-500/30 transition-all uppercase tracking-wider hover:bg-emerald-400/20">
+                            class="hidden text-xs font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/15 hover:bg-emerald-500/25 px-4 py-2 rounded-lg border border-emerald-600/30 dark:border-emerald-500/30 transition-all uppercase tracking-wider">
                             Generate PGP Key
                         </a>
                     </div>
@@ -185,6 +186,14 @@
                     </div>
                 </div>
 
+                <!-- Received MAC / Signature Input (For MAC Verification) -->
+                <div id="receivedMacContainer" class="hidden flex-col gap-2">
+                    <label for="receivedMac"
+                        class="text-xs text-[var(--text-secondary)] font-semibold uppercase tracking-wider">Received MAC / Signature</label>
+                    <textarea id="receivedMac" placeholder="Paste the MAC or signature tag to verify against..."
+                        class="bg-[var(--bg-card-alt)] border border-[var(--border-card)] text-[var(--text-primary)] text-sm rounded-lg focus:ring-emerald-500 focus:border-emerald-500 block w-full p-2.5 min-h-[70px] outline-none transition-colors custom-scrollbar resize-none font-mono"></textarea>
+                </div>
+
                 <!-- Input Text -->
                 <div class="flex flex-col gap-2 flex-grow">
                     <div class="flex justify-between items-end">
@@ -200,10 +209,31 @@
 
             <!-- Output Section -->
             <div class="bg-[var(--bg-card)] border border-[var(--border-card)] rounded-xl p-4 md:p-5 shadow-xl flex flex-col gap-2 h-full">
-                <div class="flex justify-between items-end mb-1 md:mb-3">
-                    <label class="text-xs text-[var(--text-secondary)] font-semibold uppercase tracking-wider">Output Result</label>
+                <div class="flex flex-wrap justify-between items-center gap-2 mb-1 md:mb-3">
+                    <div class="flex items-center gap-3 flex-wrap">
+                        <label class="text-xs text-[var(--text-secondary)] font-semibold uppercase tracking-wider">Output Result</label>
+                        <div id="prefixToggleContainer" class="hidden items-center gap-1.5 bg-[var(--bg-card-alt)] px-2.5 py-1 rounded-lg border border-[var(--border-card)]">
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" id="addAlgoPrefix" class="sr-only peer" checked>
+                                <div class="w-7 h-4 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-emerald-500"></div>
+                            </label>
+                            <label for="addAlgoPrefix" class="text-[11px] text-[var(--text-secondary)] font-medium select-none cursor-pointer">
+                                Add Algo & Lvl prefix
+                            </label>
+                            <div class="relative group flex items-center">
+                                <svg class="w-3.5 h-3.5 text-[var(--text-dim)] hover:text-[var(--text-primary)] cursor-pointer" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                                <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 hidden group-hover:block z-50">
+                                    <div class="bg-slate-900 text-slate-200 text-[10px] rounded px-2.5 py-1.5 shadow-xl border border-slate-700 whitespace-nowrap">
+                                        Prefix is only supported within CryptoStudio
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                     <button onclick="copyOutput()"
-                        class="flex items-center gap-1.5 text-xs bg-[var(--bg-card-alt)] hover:bg-gray-700 text-[var(--text-secondary)] py-1.5 px-3 rounded-md border border-[var(--border-card)] transition-colors">
+                        class="flex items-center gap-1.5 text-xs bg-[var(--bg-card-alt)] hover:bg-[var(--border-card)] text-[var(--text-secondary)] py-1.5 px-3 rounded-md border border-[var(--border-card)] transition-colors">
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"
                             xmlns="http://www.w3.org/2000/svg">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -215,22 +245,22 @@
                 </div>
 
                 <div id="outputArea"
-                    class="bg-[var(--bg-app)] border border-[var(--border-card)] rounded-lg p-4 flex-grow min-h-[150px] md:min-h-[300px] overflow-auto custom-scrollbar font-mono text-sm text-[var(--text-secondary)] break-all whitespace-pre-wrap">
+                    class="bg-[var(--bg-app)] border border-[var(--border-card)] rounded-lg p-4 flex-grow min-h-[150px] md:min-h-[300px] overflow-auto custom-scrollbar font-mono text-sm text-[var(--text-primary)] break-all whitespace-pre-wrap">
                 </div>
 
                 <!-- Recovery Area (Dynamic buttons) -->
-                <div id="recoveryArea" class="hidden justify-end mt-2"></div>
+                <div id="recoveryArea" class="hidden justify-end"></div>
 
                 <!-- Toast Message -->
                 <div id="toastMsg"
-                    class="opacity-0 transition-opacity duration-300 text-xs text-emerald-400 text-center mt-2 h-4">
+                    class="hidden opacity-0 transition-opacity duration-300 text-xs text-emerald-400 text-center">
                     Copied to clipboard!
                 </div>
 
                 <!-- Live Status Indicator -->
-                <div class="mt-4 flex justify-between items-center border-t border-[var(--border-card)] pt-4">
-                    <span class="text-xs text-slate-500 uppercase font-bold tracking-widest">Engine Status</span>
-                    <div id="statusText" class="text-xs text-slate-500 uppercase font-black tracking-widest">Idle</div>
+                <div class="mt-auto flex justify-between items-center border-t border-[var(--border-card)] pt-3">
+                    <span class="text-xs text-[var(--text-dim)] uppercase font-bold tracking-widest">Engine Status</span>
+                    <div id="statusText" class="text-xs text-emerald-500 uppercase font-black tracking-widest">Idle</div>
                 </div>
             </div>
 
