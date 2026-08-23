@@ -496,52 +496,58 @@ export async function executeTransformation() {
             els.outputArea.appendChild(errorSpan);
 
             // Auto-detect format from input prefix if it doesn't match the selected algorithm
-            const cleanInput = text.replace(/\s+/g, '');
-            const prefixMap = {
-                'c20p': { id: 'chacha20-poly1305', name: 'ChaCha20-Poly1305' },
-                'xc20p': { id: 'xchacha20-poly1305', name: 'XChaCha20-Poly1305' },
-                'xsalsa': { id: 'xsalsa20-poly1305', name: 'XSalsa20-Poly1305' },
-                'gcm': { id: 'aes-gcm', name: 'AES-256-GCM' },
-                'ctr': { id: 'aes-ctr', name: 'AES-256-CTR' },
-                'c20': { id: 'chacha20', name: 'ChaCha20' },
-                'salsa': { id: 'salsa20', name: 'Salsa20' }
-            };
-
-            let detected = null;
-            const prefixMatch = cleanInput.match(/^(?:lv\d:)?([a-z0-9]+):/);
-            if (prefixMatch && prefixMap[prefixMatch[1]]) {
-                detected = prefixMap[prefixMatch[1]];
-            }
-
-            if (detected && detected.id !== algo) {
-                els.recoveryArea.textContent = '';
-                const warningBox = document.createElement('div');
-                warningBox.className = 'w-full p-2 bg-amber-500/10 border border-amber-500/30 rounded-xl flex items-center justify-between gap-2 text-amber-400 font-mono';
-
-                warningBox.innerHTML = DOMPurify.sanitize(`
-                    <div class="flex items-center gap-2">
-                        <svg class="w-7 h-7 text-amber-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
-                        </svg>
-                        <div class="flex flex-col justify-center">
-                            <span class="text-xs font-bold text-amber-300 tracking-wide leading-snug">Algorithm Mismatch</span>
-                            <span class="text-xs text-amber-400/90 font-sans leading-tight">This ciphertext was encrypted with <strong>${detected.name}</strong></span>
-                        </div>
-                    </div>
-                `);
-
-                const switchBtn = document.createElement('button');
-                switchBtn.className = 'px-3 py-1.5 bg-amber-500/20 hover:bg-amber-500/30 text-amber-200 rounded-lg border border-amber-500/40 text-[10px] font-bold uppercase tracking-wider text-center leading-tight whitespace-pre-line transition-all shrink-0 active:scale-95';
-                switchBtn.textContent = `Switch to\n${detected.name}`;
-                switchBtn.onclick = () => {
-                    els.algorithmSelect.value = detected.id;
-                    els.algorithmSelect.dispatchEvent(new Event('change'));
+            if (currentCategory === 'encryption') {
+                const cleanInput = text.replace(/\s+/g, '');
+                const prefixMap = {
+                    'c20p': { id: 'chacha20-poly1305', name: 'ChaCha20-Poly1305' },
+                    'xc20p': { id: 'xchacha20-poly1305', name: 'XChaCha20-Poly1305' },
+                    'xsalsa': { id: 'xsalsa20-poly1305', name: 'XSalsa20-Poly1305' },
+                    'gcm': { id: 'aes-gcm', name: 'AES-256-GCM' },
+                    'ctr': { id: 'aes-ctr', name: 'AES-256-CTR' },
+                    'c20': { id: 'chacha20', name: 'ChaCha20' },
+                    'salsa': { id: 'salsa20', name: 'Salsa20' },
+                    'aes': { id: 'aes', name: 'AES-256-CBC' },
+                    '3des': { id: 'tripledes', name: 'TripleDES (3DES)' },
+                    'rabbit': { id: 'rabbit', name: 'Rabbit' },
+                    'rc4': { id: 'rc4', name: 'RC4 (ARC4)' }
                 };
 
-                warningBox.appendChild(switchBtn);
-                els.recoveryArea.appendChild(warningBox);
-                els.recoveryArea.classList.remove('hidden');
-                els.recoveryArea.classList.add('flex');
+                let detected = null;
+                const prefixMatch = cleanInput.match(/^(?:lv\d:)?([a-z0-9]+):/);
+                if (prefixMatch && prefixMap[prefixMatch[1]]) {
+                    detected = prefixMap[prefixMatch[1]];
+                }
+
+                if (detected && detected.id !== algo) {
+                    els.recoveryArea.textContent = '';
+                    const warningBox = document.createElement('div');
+                    warningBox.className = 'w-full p-2 bg-amber-500/10 border border-amber-500/30 rounded-xl flex items-center justify-between gap-2 text-amber-400 font-mono';
+
+                    warningBox.innerHTML = DOMPurify.sanitize(`
+                        <div class="flex items-center gap-2">
+                            <svg class="w-7 h-7 text-amber-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                            </svg>
+                            <div class="flex flex-col justify-center">
+                                <span class="text-xs font-bold text-amber-300 tracking-wide leading-snug">Algorithm Mismatch</span>
+                                <span class="text-xs text-amber-400/90 font-sans leading-tight">This ciphertext was encrypted with <strong>${detected.name}</strong></span>
+                            </div>
+                        </div>
+                    `);
+
+                    const switchBtn = document.createElement('button');
+                    switchBtn.className = 'px-3 py-1.5 bg-amber-500/20 hover:bg-amber-500/30 text-amber-200 rounded-lg border border-amber-500/40 text-[10px] font-bold uppercase tracking-wider text-center leading-tight whitespace-pre-line transition-all shrink-0 active:scale-95';
+                    switchBtn.textContent = `Switch to\n${detected.name}`;
+                    switchBtn.onclick = () => {
+                        els.algorithmSelect.value = detected.id;
+                        els.algorithmSelect.dispatchEvent(new Event('change'));
+                    };
+
+                    warningBox.appendChild(switchBtn);
+                    els.recoveryArea.appendChild(warningBox);
+                    els.recoveryArea.classList.remove('hidden');
+                    els.recoveryArea.classList.add('flex');
+                }
             }
         }
         if (els.statusText) {

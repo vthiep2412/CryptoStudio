@@ -164,9 +164,9 @@ body {
 }
 
 :root.light .dropdown-group-header {
-    background: #059669;
+    background: #047857;
     color: #f8fafc;
-    border-left: 3px solid #047857;
+    border-left: 3px solid #065f46;
 }
 
 .dropdown-group-header:first-child {

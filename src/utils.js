@@ -56,14 +56,14 @@ export function initializeCustomDropdowns() {
             let currentGroup = null;
 
             Array.from(select.options).forEach((opt, idx) => {
-                const groupName = opt.dataset.group || opt.parentElement?.label;
+                const groupName = opt.dataset.group || opt.parentElement?.label || null;
                 if (groupName && groupName !== currentGroup) {
-                    currentGroup = groupName;
                     const header = document.createElement('div');
                     header.className = 'dropdown-group-header';
                     header.innerText = groupName;
                     optionsList.appendChild(header);
                 }
+                currentGroup = groupName;
 
                 const optionEl = document.createElement('div');
                 optionEl.className = 'dropdown-option' + (idx === select.selectedIndex ? ' selected' : '');
@@ -79,18 +79,19 @@ export function initializeCustomDropdowns() {
             });
         };
 
+        syncOptions();
+
         const toggleDropdown = (show) => {
             if (show) {
                 syncOptions();
-                trigger.classList.add('open');
                 optionsList.classList.add('show');
-                const selectedEl = optionsList.querySelector('.dropdown-option.selected');
+                trigger.classList.add('open');
+
+                const selectedEl = optionsList.querySelector('.selected');
                 if (selectedEl) {
-                    requestAnimationFrame(() => {
-                        optionsList.scrollTop =
-                            selectedEl.offsetTop - (optionsList.clientHeight - selectedEl.offsetHeight) / 2;
-                    });
-                }            } else {
+                    optionsList.scrollTop = selectedEl.offsetTop - (optionsList.clientHeight - selectedEl.offsetHeight) / 2;
+                }
+            } else {
                 trigger.classList.remove('open');
                 optionsList.classList.remove('show');
             }
@@ -109,7 +110,7 @@ export function initializeCustomDropdowns() {
             label.innerText = select.options[select.selectedIndex]?.text || 'Select...';
         };
         const observer = new MutationObserver(updateLabel);
-        observer.observe(select, { childList: true, attributes: true });
+        observer.observe(select, { childList: true, attributes: true, subtree: true });
         select.addEventListener('change', updateLabel);
         select._observer = observer;
 

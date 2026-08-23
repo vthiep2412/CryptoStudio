@@ -124,7 +124,12 @@ export const Base85 = {
         if (clean.endsWith('~>')) clean = clean.slice(0, -2);
 
         const bytes = [];
-        for (let i = 0; i < clean.length; i += 5) {
+        for (let i = 0; i < clean.length; ) {
+            if (clean[i] === 'z') {
+                bytes.push(0, 0, 0, 0);
+                i++;
+                continue;
+            }
             const chunk = clean.slice(i, i + 5);
             let val = 0;
             for (let j = 0; j < 5; j++) {
@@ -142,6 +147,7 @@ export const Base85 = {
             for (let j = 0; j < 4 - pad; j++) {
                 bytes.push(fullBytes[j]);
             }
+            i += chunk.length;
         }
         return decoder.decode(new Uint8Array(bytes));
     }
@@ -188,12 +194,15 @@ const MORSE_MAP = {
     'S': '...', 'T': '-', 'U': '..-', 'V': '...-', 'W': '.--', 'X': '-..-',
     'Y': '-.--', 'Z': '--..', '1': '.----', '2': '..---', '3': '...--',
     '4': '....-', '5': '.....', '6': '-....', '7': '--...', '8': '---..',
-    '9': '----.', '0': '-----', ' ': '/', '.': '.-.-.-', ',': '--..--',
+    '9': '----.', '0': '-----', ' ': '/', '/': '-..-.', '.': '.-.-.-', ',': '--..--',
     '?': '..--..', '!': '-.-.--', '@': '.--.-.'
 };
 const REVERSE_MORSE = Object.entries(MORSE_MAP).reduce((acc, [k, v]) => { acc[v] = k; return acc; }, {});
 
 export const MorseCode = {
     encode: (text) => text.toUpperCase().split('').map(c => MORSE_MAP[c] || c).join(' '),
-    decode: (text) => text.trim().split(/\s+/).map(m => REVERSE_MORSE[m] || m).join('').replace(/\//g, ' ')
+    decode: (text) => text.trim().split(/\s+/).map(m => {
+        if (m === '/') return ' ';
+        return REVERSE_MORSE[m] || m;
+    }).join('')
 };
