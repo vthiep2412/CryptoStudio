@@ -1,6 +1,6 @@
 import { chacha20poly1305, xchacha20poly1305, chacha20 } from '@noble/ciphers/chacha.js';
 import { salsa20, xsalsa20poly1305 } from '@noble/ciphers/salsa.js';
-import { gcm } from '@noble/ciphers/aes.js';
+import { gcm, cmac } from '@noble/ciphers/aes.js';
 import { poly1305 } from '@noble/ciphers/_poly1305.js';
 import { blake3 } from '@noble/hashes/blake3.js';
 import { blake2s, blake2b } from '@noble/hashes/blake2.js';
@@ -16,6 +16,31 @@ function getSecureRandom(len) {
     const bytes = new Uint8Array(len);
     crypto.getRandomValues(bytes);
     return bytes;
+}
+
+// NIST SP 800-108r1 KDF in Counter Mode using AES-256-CMAC (Standard XAES-256-GCM KDF)
+function deriveXAES256Key(key, nonce12) {
+    // Block 1 (i = 1): [0x00, 0x00, 0x00, 0x01, 0x58 ('X'), 0x00, ...nonce12]
+    const block1Input = new Uint8Array(18);
+    block1Input[3] = 0x01;
+    block1Input[4] = 0x58; // 'X'
+    block1Input[5] = 0x00;
+    block1Input.set(nonce12, 6);
+
+    // Block 2 (i = 2): [0x00, 0x00, 0x00, 0x02, 0x58 ('X'), 0x00, ...nonce12]
+    const block2Input = new Uint8Array(18);
+    block2Input[3] = 0x02;
+    block2Input[4] = 0x58; // 'X'
+    block2Input[5] = 0x00;
+    block2Input.set(nonce12, 6);
+
+    const k1 = cmac(block1Input, key);
+    const k2 = cmac(block2Input, key);
+
+    const derivedKey = new Uint8Array(32);
+    derivedKey.set(k1, 0);
+    derivedKey.set(k2, 16);
+    return derivedKey;
 }
 
 // Universal AEAD Encrypt with PBKDF2 Key Derivation
@@ -41,8 +66,7 @@ export async function encryptNobleAEAD(text, passphrase, cipherType, iterations)
         const cipher = xsalsa20poly1305(key, nonce);
         ciphertext = cipher.encrypt(data);
     } else if (cipherType === 'xaes-256-gcm') {
-        // XAES-256-GCM: 24-byte nonce -> 12-byte subkey derivation + 12-byte inner nonce
-        const derivedKey = hmac(sha256, key, nonce.subarray(0, 12));
+        const derivedKey = deriveXAES256Key(key, nonce.subarray(0, 12));
         const cipher = gcm(derivedKey, nonce.subarray(12, 24));
         ciphertext = cipher.encrypt(data);
     }
@@ -73,7 +97,7 @@ export async function decryptNobleAEAD(formattedString, passphrase, cipherType, 
         const cipher = xsalsa20poly1305(key, nonce);
         decrypted = cipher.decrypt(ciphertext);
     } else if (cipherType === 'xaes-256-gcm') {
-        const derivedKey = hmac(sha256, key, nonce.subarray(0, 12));
+        const derivedKey = deriveXAES256Key(key, nonce.subarray(0, 12));
         const cipher = gcm(derivedKey, nonce.subarray(12, 24));
         decrypted = cipher.decrypt(ciphertext);
     }
