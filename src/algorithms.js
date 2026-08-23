@@ -18,6 +18,7 @@ export const algorithms = {
     encryption: [
         // Modern AEAD
         { id: 'aes-gcm', name: 'AES-256-GCM', group: 'Modern AEAD' },
+        { id: 'xaes-gcm', name: 'XAES-256-GCM', group: 'Modern AEAD' },
         { id: 'chacha20-poly1305', name: 'ChaCha20-Poly1305', group: 'Modern AEAD' },
         { id: 'xchacha20-poly1305', name: 'XChaCha20-Poly1305', group: 'Modern AEAD' },
         { id: 'xsalsa20-poly1305', name: 'XSalsa20-Poly1305', group: 'Modern AEAD' },

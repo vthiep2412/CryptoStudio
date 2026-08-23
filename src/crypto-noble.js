@@ -1,5 +1,6 @@
 import { chacha20poly1305, xchacha20poly1305, chacha20 } from '@noble/ciphers/chacha.js';
 import { salsa20, xsalsa20poly1305 } from '@noble/ciphers/salsa.js';
+import { gcm } from '@noble/ciphers/aes.js';
 import { poly1305 } from '@noble/ciphers/_poly1305.js';
 import { blake3 } from '@noble/hashes/blake3.js';
 import { blake2s, blake2b } from '@noble/hashes/blake2.js';
@@ -23,7 +24,7 @@ export async function encryptNobleAEAD(text, passphrase, cipherType, iterations)
     const key = await pbkdf2DeriveNative(passphrase, salt, 32, 0, iterations);
 
     let nonceLen = 12;
-    if (cipherType === 'xchacha20-poly1305' || cipherType === 'xsalsa20-poly1305') {
+    if (cipherType === 'xchacha20-poly1305' || cipherType === 'xsalsa20-poly1305' || cipherType === 'xaes-256-gcm') {
         nonceLen = 24;
     }
     const nonce = getSecureRandom(nonceLen);
@@ -38,6 +39,11 @@ export async function encryptNobleAEAD(text, passphrase, cipherType, iterations)
         ciphertext = cipher.encrypt(data);
     } else if (cipherType === 'xsalsa20-poly1305') {
         const cipher = xsalsa20poly1305(key, nonce);
+        ciphertext = cipher.encrypt(data);
+    } else if (cipherType === 'xaes-256-gcm') {
+        // XAES-256-GCM: 24-byte nonce -> 12-byte subkey derivation + 12-byte inner nonce
+        const derivedKey = hmac(sha256, key, nonce.subarray(0, 12));
+        const cipher = gcm(derivedKey, nonce.subarray(12, 24));
         ciphertext = cipher.encrypt(data);
     }
 
@@ -65,6 +71,10 @@ export async function decryptNobleAEAD(formattedString, passphrase, cipherType, 
         decrypted = cipher.decrypt(ciphertext);
     } else if (cipherType === 'xsalsa20-poly1305') {
         const cipher = xsalsa20poly1305(key, nonce);
+        decrypted = cipher.decrypt(ciphertext);
+    } else if (cipherType === 'xaes-256-gcm') {
+        const derivedKey = hmac(sha256, key, nonce.subarray(0, 12));
+        const cipher = gcm(derivedKey, nonce.subarray(12, 24));
         decrypted = cipher.decrypt(ciphertext);
     }
 

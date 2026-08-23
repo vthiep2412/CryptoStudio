@@ -252,6 +252,12 @@ export const Transformers = {
         decryptFn: (c, k, iters) => decryptAesGcm(c, k, iters),
         errorText: 'AES-GCM decryption failed. Check password and format.'
     }),
+    'xaes-gcm': createCipherTransformer({
+        prefix: 'xaes',
+        encryptFn: (t, k, iters) => encryptNobleAEAD(t, k, 'xaes-256-gcm', iters),
+        decryptFn: (c, k, iters) => decryptNobleAEAD(c, k, 'xaes-256-gcm', iters),
+        errorText: 'XAES-256-GCM decryption failed. Check password.'
+    }),
     'chacha20-poly1305': createCipherTransformer({
         prefix: 'c20p',
         encryptFn: (t, k, iters) => encryptNobleAEAD(t, k, 'chacha20-poly1305', iters),

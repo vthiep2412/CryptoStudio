@@ -507,6 +507,7 @@ export async function executeTransformation() {
                     'c20': { id: 'chacha20', name: 'ChaCha20' },
                     'salsa': { id: 'salsa20', name: 'Salsa20' },
                     'aes': { id: 'aes', name: 'AES-256-CBC' },
+                    'xaes': { id: 'xaes-gcm', name: 'XAES-256-GCM' },
                     '3des': { id: 'tripledes', name: 'TripleDES (3DES)' },
                     'rabbit': { id: 'rabbit', name: 'Rabbit' },
                     'rc4': { id: 'rc4', name: 'RC4 (ARC4)' }
