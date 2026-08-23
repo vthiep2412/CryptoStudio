@@ -516,12 +516,28 @@ document.addEventListener('DOMContentLoaded', () => {
 
     init();
 
+    // Restore category from localStorage with defensive validation
     const savedCat = localStorage.getItem('activeCategory');
-    if (savedCat) setCategory(savedCat, false);
+    if (savedCat && Object.keys(algorithms).includes(savedCat)) {
+        setCategory(savedCat, false);
+    } else {
+        setCategory('encoding', false);
+    }
 
+    // Restore PGP state with strict canonical pair validation
     const savedPgpAlgo = localStorage.getItem('activePgpAlgo');
     const savedPgpIdx = localStorage.getItem('activePgpIdx');
-    if (savedPgpAlgo && savedPgpIdx !== null) {
-        setPgpAction(savedPgpAlgo, parseInt(savedPgpIdx), false);
+    const expectedPgpPairs = {
+        'pgp-encrypt': '0',
+        'pgp-decrypt': '1',
+        'pgp-sign': '2',
+        'pgp-verify': '3'
+    };
+
+    if (savedPgpAlgo && savedPgpIdx !== null && expectedPgpPairs[savedPgpAlgo] === savedPgpIdx) {
+        setPgpAction(savedPgpAlgo, parseInt(savedPgpIdx, 10), false);
+    } else {
+        localStorage.removeItem('activePgpIdx');
+        localStorage.removeItem('activePgpAlgo');
     }
 });

@@ -39,10 +39,8 @@ async function encryptLegacy(t, k, algoFn, keySize, ivSize) {
 // Central resilient decryption function
 async function resilientDecryption(input, passphrase, keySize, ivSize, decryptFn) {
     const clean = (str) => {
-        return str.trim()
-            .replace(/=/g, '')
-            .replace(/^[:]+|[:]+$/g, '')
-            .replace(/:+/g, ':');
+        // Remove all whitespace (newlines, spaces, tabs) which often get inserted when copying large chunks of text
+        return str.replace(/\s+/g, '');
     };
 
     const t = clean(input);
@@ -92,7 +90,7 @@ async function resilientDecryption(input, passphrase, keySize, ivSize, decryptFn
 
     if (saltPart && cipherPart) {
         const selectedLv = parseInt(document.getElementById('securityLevel').value) || 5;
-        const levels = [selectedLv, 1, 2, 3, 4, 5, 6, 7];
+        const levels = [selectedLv, 5, 4, 3, 2, 1, 6, 7];
         const seen = new Set();
         for (const l of levels) {
             if (seen.has(l)) continue;
@@ -103,7 +101,7 @@ async function resilientDecryption(input, passphrase, keySize, ivSize, decryptFn
     }
 
     try {
-        const rawDec = decryptFn(input.trim(), passphrase).toString(CryptoJS.enc.Utf8);
+        const rawDec = decryptFn(t, passphrase).toString(CryptoJS.enc.Utf8);
         if (rawDec) return rawDec;
     } catch (e) { }
 
@@ -222,7 +220,8 @@ export const Transformers = {
             return btoa(parts.join(''));
         },
         reverse: (t, k) => {
-            const raw = atob(t);
+            const cleanT = t.replace(/\s+/g, '');
+            const raw = atob(cleanT);
             const tBytes = new Uint8Array(raw.length);
             for (let i = 0; i < raw.length; i++) tBytes[i] = raw.charCodeAt(i);
             const kBytes = encoder.encode(k);

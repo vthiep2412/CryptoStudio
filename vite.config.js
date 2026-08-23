@@ -7,8 +7,8 @@ export default defineConfig({
   build: {
     rollupOptions: {
       input: {
-        main: resolve(__dirname, 'index.html'),
-        pgp: resolve(__dirname, 'pgp-gen.html'),
+        main: resolve(import.meta.dirname, 'index.html'),
+        pgp: resolve(import.meta.dirname, 'pgp-gen.html'),
       },
     },
   },
